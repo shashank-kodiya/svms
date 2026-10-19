@@ -1,0 +1,44 @@
+# Render "Blueprint" for the backend API (Render > New > Blueprint > pick this repository).
+# Secrets marked sync:false are asked for in the Render dashboard; they are never stored in the repository.
+services:
+  - type: web
+    name: svms-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false            # your Vercel address, for example https://svms.vercel.app (comma-separate several)
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: REMINDERS
+        value: "off"           # free servers sleep, so an outside timer runs the reminders instead (see README)
+      - key: CRON_SECRET
+        generateValue: true
+      - key: AUTH_RATE_LIMIT
+        value: 20
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM_EMAIL
+        sync: false
+      - key: GOOGLE_MAPS_SERVER_KEY
+        sync: false
