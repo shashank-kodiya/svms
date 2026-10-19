@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Cloud-Based Smart Vehicle Service Management System
 
 Final-year project. React + Node.js/Express + MongoDB Atlas.
@@ -1064,3 +1065,7 @@ Then create an empty repository on GitHub and run the two `git remote add` / `gi
 - **Validation:** every input is checked on the server, for example the 6-digit PIN code and the 10-digit mobile number.
 - **Admin cannot be self-registered:** the register API accepts only customer or service center. The admin is created by the seed script.
 - **Atomic sign-up:** a service center's user account and its profile are created in one MongoDB transaction, so you never get half an account.
+=======
+# svms
+...
+>>>>>>> f34fd08e1e8abb7ef3baf3283372a57f89b086c6
