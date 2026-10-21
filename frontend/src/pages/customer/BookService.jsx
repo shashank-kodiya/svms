@@ -11,6 +11,7 @@ import useMyLocation from '../../hooks/useMyLocation.js';
 import api, { errorMessage } from '../../api/client.js';
 import { getSocket } from '../../api/socket.js';
 import { inr, hrs, localDate, niceDate, niceTime } from '../../utils/booking.js';
+import './BookService.css';
 
 export default function BookService() {
   const navigate = useNavigate();
@@ -125,7 +126,7 @@ export default function BookService() {
   }, []);
 
   return (
-    <Layout title="Book a service" subtitle="Only verified centers that service your vehicle's brand and offer the service are shown.">
+    <Layout className="book-service-page" title="Book a service" subtitle="Only verified centers that service your vehicle's brand and offer the service are shown.">
       {vehicles?.length === 0 ? (
         <div className="empty">Add a vehicle first. <Link to="/customer/vehicles/new">Add vehicle</Link></div>
       ) : (

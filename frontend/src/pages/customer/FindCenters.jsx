@@ -41,6 +41,9 @@ export default function FindCenters() {
     document.getElementById(`c-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
+  const selectedCenter = useMemo(() => centers.find((c) => c._id === selected) || null, [centers, selected]);
+  const routeToSelected = selectedCenter && loc ? { from: loc, to: { lat: selectedCenter.lat, lng: selectedCenter.lng } } : null;
+
   return (
     <Layout title="Find centers" subtitle="Verified service centers on the map. Share your location to see how far each one is.">
       <div className="card">
@@ -63,7 +66,7 @@ export default function FindCenters() {
         <p className="small muted">Your location is used only to work out distances in this browser tab. It is not saved.</p>
       </div>
 
-      <MapView markers={markers} user={loc} selectedId={selected} onSelect={select} />
+      <MapView markers={markers} user={loc} selectedId={selected} onSelect={select} route={routeToSelected} />
 
       {data && centers.length === 0 && (
         <div className="empty">{loc ? `No verified center with a map location within ${radius} km.` : 'No verified center has set its map location yet.'}</div>
@@ -82,7 +85,7 @@ export default function FindCenters() {
               {c.distanceKm != null && <div className="price"><b>{c.distanceKm} km</b><span className="small muted">straight line</span></div>}
             </div>
             <div className="row">
-              <RouteInfo centerId={c._id} from={loc} />
+              <RouteInfo centerId={c._id} from={loc} autoFetch={selected === c._id} />
               <Link className="btn primary sm" to="/customer/book">Book a service</Link>
             </div>
           </div>

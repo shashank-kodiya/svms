@@ -1,0 +1,36 @@
+.center-portal .center-payments {
+  display: grid;
+  gap: 18px;
+}
+
+.center-portal .center-payments__card,
+.center-portal .center-payments .rec {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.center-portal .center-payments .rec {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--warn);
+  border-radius: 9px;
+  background: #0d131a;
+}
+
+.center-portal .center-payments .rec:hover {
+  border-left-color: #ffab65;
+}
+
+.center-portal .center-payments input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .center-portal .center-payments__card,
+  .center-portal .center-payments .rec {
+    transition: none;
+  }
+
+  .center-portal .center-payments__card:hover,
+  .center-portal .center-payments .rec:hover {
+    transform: none;
+  }
+}

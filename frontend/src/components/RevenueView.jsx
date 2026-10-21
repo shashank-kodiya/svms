@@ -36,8 +36,8 @@ export default function RevenueView({ url, admin = false }) {
   const preset = (n) => setRange({ from: daysAgo(n - 1), to: daysAgo(0) });
 
   return (
-    <>
-      <div className="card">
+    <div className="revenue-view">
+      <div className="card revenue-view__filters">
         <div className="row between">
           <div className="seg">
             {[[7, 'Last 7 days'], [30, 'Last 30 days'], [90, 'Last 90 days']].map(([n, t]) => (
@@ -53,19 +53,19 @@ export default function RevenueView({ url, admin = false }) {
       </div>
 
       <div className="stats">
-        <div className="stat"><span className="k">Revenue (paid)</span><span className="v">{d ? inr(d.total) : '—'}</span><span className="s">GST included</span></div>
-        <div className="stat"><span className="k">Paid invoices</span><span className="v">{d?.count ?? '—'}</span></div>
-        <div className="stat"><span className="k">Average bill</span><span className="v">{d ? inr(d.average) : '—'}</span></div>
-        <div className="stat"><span className="k">Billed, not paid yet</span><span className="v">{d ? inr(d.outstanding.total) : '—'}</span><span className="s">{d ? `${d.outstanding.count} invoice${d.outstanding.count === 1 ? '' : 's'}` : ''}</span></div>
+        <div className="stat revenue-view__stat"><span className="k">Revenue (paid)</span><span className="v">{d ? inr(d.total) : '—'}</span><span className="s">GST included</span></div>
+        <div className="stat revenue-view__stat"><span className="k">Paid invoices</span><span className="v">{d?.count ?? '—'}</span></div>
+        <div className="stat revenue-view__stat"><span className="k">Average bill</span><span className="v">{d ? inr(d.average) : '—'}</span></div>
+        <div className="stat revenue-view__stat"><span className="k">Billed, not paid yet</span><span className="v">{d ? inr(d.outstanding.total) : '—'}</span><span className="s">{d ? `${d.outstanding.count} invoice${d.outstanding.count === 1 ? '' : 's'}` : ''}</span></div>
       </div>
 
       {d && (
         <div className="grid2 top">
-          <div className="card">
+          <div className="card revenue-view__breakdown">
             <h3>By payment method</h3>
             <Bars rows={d.byMethod.map((r) => ({ ...r, key: r.method }))} label={(r) => `${PAY_METHODS[r.method] || r.method} · ${r.count}`} empty="No payments in this period." />
           </div>
-          <div className="card">
+          <div className="card revenue-view__breakdown">
             <h3>{admin ? 'By service center' : 'By service'}</h3>
             {admin
               ? <Bars rows={d.byCenter.map((r) => ({ ...r, key: r.centerId }))} label={(r) => `${r.name}${r.city ? `, ${r.city}` : ''} · ${r.count}`} empty="No payments in this period." />
@@ -75,7 +75,7 @@ export default function RevenueView({ url, admin = false }) {
       )}
 
       {d && (
-        <div className="card">
+        <div className="card revenue-view__daily">
           <h3>Day by day</h3>
           {d.byDay.length === 0 ? <p className="small muted">No payments in this period.</p> : (
             <div className="table-wrap">
@@ -91,6 +91,6 @@ export default function RevenueView({ url, admin = false }) {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }

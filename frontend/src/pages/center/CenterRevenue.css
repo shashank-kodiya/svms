@@ -1,0 +1,98 @@
+.center-portal .revenue-view {
+  display: grid;
+  gap: 18px;
+}
+
+.center-portal .revenue-view__filters {
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(242, 138, 53, .07), transparent 48%), var(--surface);
+}
+
+.center-portal .revenue-view .card,
+.center-portal .revenue-view .stat {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.center-portal .revenue-view__filters .seg {
+  border: 1px solid var(--line);
+  background: #0b1016;
+}
+
+.center-portal .revenue-view__filters .seg button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 5px 16px -8px var(--accent);
+}
+
+.center-portal .revenue-view__filters .row.between {
+  gap: 16px;
+}
+
+.center-portal .revenue-view__filters .align-end {
+  gap: 12px;
+}
+
+.center-portal .revenue-view__stat {
+  min-height: 112px;
+  justify-content: center;
+  gap: 3px;
+}
+
+.center-portal .revenue-view__breakdown,
+.center-portal .revenue-view__daily {
+  background: linear-gradient(150deg, rgba(255, 255, 255, .015), transparent 52%), var(--surface);
+}
+
+.center-portal .revenue-view__breakdown h3,
+.center-portal .revenue-view__daily h3 {
+  font-size: 1.08rem;
+}
+
+.center-portal .revenue-view .bar {
+  height: 7px;
+  background: #0b1016;
+}
+
+.center-portal .revenue-view .bar > span {
+  background: linear-gradient(90deg, #c75d19, var(--accent));
+}
+
+.center-portal .revenue-view tbody tr:hover {
+  background: transparent;
+}
+
+@media (max-width: 720px) {
+  .center-portal .revenue-view__filters .row.between {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .center-portal .revenue-view__filters .align-end {
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  .center-portal .revenue-view__filters .seg {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .center-portal .revenue-view__filters .align-end {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .center-portal .revenue-view .card,
+  .center-portal .revenue-view .stat {
+    transition: none;
+  }
+
+  .center-portal .revenue-view .card:hover,
+  .center-portal .revenue-view .stat:hover {
+    transform: none;
+  }
+}

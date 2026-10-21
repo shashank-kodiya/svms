@@ -1,6 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import NotificationBell from './NotificationBell.jsx';
+import '../pages/center/CenterPortal.css';
+import '../pages/customer/CustomerPortal.css';
+import '../pages/admin/AdminPortal.css';
 
 const ROLE_LABEL = { customer: 'Customer', service_center: 'Service Center', admin: 'Admin' };
 
@@ -33,10 +36,10 @@ const NAV = {
   ]
 };
 
-export default function Layout({ title, subtitle, actions, children }) {
+export default function Layout({ title, subtitle, actions, children, className = '' }) {
   const { user, logout } = useAuth();
   return (
-    <div className="app">
+    <div className={['app', user?.role === 'customer' ? 'customer-portal' : '', user?.role === 'service_center' ? 'center-portal' : '', user?.role === 'admin' ? 'admin-portal' : '', className].filter(Boolean).join(' ')}>
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark">SV</span>

@@ -1,0 +1,81 @@
+.customer-portal .page .card,
+.customer-portal .page .stat,
+.customer-portal .page .item,
+.customer-portal .page .rec,
+.customer-portal .page .vcard,
+.customer-portal .customer-dashboard__hero,
+.customer-portal .customer-dashboard__next {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.customer-portal .page .card:hover,
+.customer-portal .page .stat:hover,
+.customer-portal .page .item:hover,
+.customer-portal .page .rec:hover,
+.customer-portal .page .vcard:hover,
+.customer-portal .customer-dashboard__hero:hover,
+.customer-portal .customer-dashboard__next:hover {
+  transform: translateY(-3px);
+  border-color: #78aaff;
+  box-shadow: 0 14px 28px -20px rgba(52, 125, 255, .85), 0 0 14px -8px rgba(52, 125, 255, .75);
+}
+
+.customer-portal .page .stat:hover {
+  background: var(--surface);
+}
+
+.customer-portal .page .item,
+.customer-portal .page .rec {
+  border-color: var(--line);
+  background: #0d131a;
+}
+
+.customer-portal .customer-dashboard__hero:hover {
+  border-color: rgba(120, 170, 255, .7);
+}
+
+.customer-portal .customer-dashboard__next:hover {
+  background: rgba(8, 12, 17, .55);
+}
+
+.customer-portal .page .seg {
+  border: 1px solid var(--line);
+  background: #0b1016;
+}
+
+.customer-portal .page .seg button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 5px 16px -8px var(--accent);
+}
+
+.customer-portal .page .btn:not(.primary):hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 20px -14px rgba(52, 125, 255, .7);
+}
+
+.customer-portal .page .empty {
+  background: rgba(17, 24, 32, .72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-portal .page .card,
+  .customer-portal .page .stat,
+  .customer-portal .page .item,
+  .customer-portal .page .rec,
+  .customer-portal .page .vcard,
+  .customer-portal .customer-dashboard__hero,
+  .customer-portal .customer-dashboard__next {
+    transition: none;
+  }
+
+  .customer-portal .page .card:hover,
+  .customer-portal .page .stat:hover,
+  .customer-portal .page .item:hover,
+  .customer-portal .page .rec:hover,
+  .customer-portal .page .vcard:hover,
+  .customer-portal .customer-dashboard__hero:hover,
+  .customer-portal .customer-dashboard__next:hover {
+    transform: none;
+  }
+}

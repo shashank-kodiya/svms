@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+.vsmsLogin {
+  --login-bg: #000000;
+  --login-page-strong: #0e1514;
+  --login-page-raised: #080c11;
+  --login-page-accent: #347dff;
+  --login-surface: rgba(18, 24, 32, .82);
+  --login-line: rgba(170, 190, 220, .19);
+  --login-fg: #e9eef5;
+  --login-muted: #a2adbd;
+  --login-faint: #778397;
+  --login-customer: #347dff;
+  --login-center: #f28a35;
+  --login-accent: var(--login-customer);
+  min-height: 100vh;
+  min-height: 100svh;
+  isolation: isolate;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px 28px;
+  overflow: hidden;
+  background: var(--login-bg);
+  color: var(--login-fg);
+  font: 15px/1.5 "IBM Plex Sans", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.vsmsLogin[data-portal="center"] { --login-accent: var(--login-center); }
+.vsmsLogin *, .vsmsLogin *::before, .vsmsLogin *::after { box-sizing: border-box; }
+.vsmsLogin button, .vsmsLogin input { font: inherit; }
+.vsmsLogin a { color: inherit; }
+.vsmsLogin h1, .vsmsLogin h2, .vsmsLogin h3, .vsmsLogin p { margin: 0; }
+.vsmsLogin h1, .vsmsLogin h2, .vsmsLogin h3 { font-family: Archivo, "Aptos Display", sans-serif; text-wrap: balance; }
+.vsmsLogin svg { width: 20px; height: 20px; flex: none; }
+.vsmsLogin :focus-visible { outline: 2px solid var(--login-accent); outline-offset: 3px; }
+
+.vsmsLogin__backdrop { position: fixed; z-index: -1; inset: 0; overflow: hidden; background: linear-gradient(135deg, var(--login-page-strong), var(--login-page-raised) 58%, var(--login-bg)); }
+.vsmsLogin__backdrop img { position: absolute; inset: -36px; width: calc(100% + 72px); height: calc(100% + 72px); object-fit: cover; filter: blur(28px) saturate(.85) brightness(.34); opacity: 0; transition: opacity .7s ease; }
+.vsmsLogin[data-portal="customer"] .vsmsLogin__backdropCustomer,
+.vsmsLogin[data-portal="center"] .vsmsLogin__backdropCenter { opacity: 1; }
+.vsmsLogin__backdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(14, 21, 20, .84), rgba(8, 12, 17, .64) 55%, rgba(0, 0, 0, .86)), radial-gradient(ellipse at 16% 18%, color-mix(in srgb, var(--login-page-accent) 16%, transparent), transparent 58%); }
+
+.vsmsLogin__header { width: min(1120px, 100%); min-height: 76px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.vsmsLogin__brand { display: inline-flex; align-items: center; gap: 12px; color: var(--login-fg); text-decoration: none; }
+.vsmsLogin__brand > span:last-child { display: grid; gap: 2px; line-height: 1.2; }
+.vsmsLogin__brand b { font: 700 15px/1.2 Archivo, sans-serif; }
+.vsmsLogin__brand small { color: var(--login-muted); font-size: 12px; }
+.vsmsLogin__brandMark { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; color: #fff; background: linear-gradient(140deg, #367fff, #1749a6); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+.vsmsLogin__brandMark svg { width: 22px; height: 22px; }
+.vsmsLogin__headerTag { color: var(--login-muted); font-size: 13px; }
+
+.vsmsLogin__main { width: min(1080px, 100%); margin: auto; padding: 18px 0 12px; display: grid; gap: 18px; }
+.vsmsLogin__intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.vsmsLogin__eyebrow { color: var(--login-accent); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.vsmsLogin__intro h1 { margin-top: 5px; font-size: 28px; line-height: 1.15; }
+.vsmsLogin__intro p, .vsmsLogin__formHeading p { margin-top: 5px; color: var(--login-muted); font-size: 14px; }
+
+.vsmsLogin__tabs { position: relative; display: inline-flex; flex: none; gap: 4px; padding: 4px; border: 1px solid var(--login-line); border-radius: 11px; background: rgba(8, 12, 17, .66); }
+.vsmsLogin__tabs button { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: var(--login-muted); font-weight: 600; cursor: pointer; transition: background .2s, color .2s; }
+.vsmsLogin__tabs button svg { width: 17px; height: 17px; }
+.vsmsLogin__tabs button[aria-pressed="true"] { background: var(--login-accent); color: #fff; box-shadow: 0 5px 16px -8px var(--login-accent); }
+
+.vsmsLogin__card { position: relative; height: 542px; min-height: 542px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); overflow: hidden; border: 1px solid var(--login-line); border-radius: 16px; background: var(--login-surface); box-shadow: 0 32px 80px -36px rgba(0, 0, 0, .85), inset 0 1px rgba(255,255,255,.05); backdrop-filter: blur(18px); animation: vsmsLogin-enter .55s ease both; transition: height .8s cubic-bezier(.75, 0, .2, 1); }
+.vsmsLogin__card[data-mode="register"] { height: 662px; min-height: 662px; }
+.vsmsLogin__card[data-mode="register"][data-portal="center"] { height: 964px; min-height: 964px; }
+.vsmsLogin__form { position: relative; z-index: 1; grid-column: 1 / -1; width: 50%; height: 100%; min-width: 0; min-height: 0; align-self: stretch; padding: 42px clamp(26px, 4vw, 52px); display: grid; align-content: center; background: var(--login-surface); color: var(--login-fg); transition: transform .8s cubic-bezier(.75, 0, .2, 1); }
+.vsmsLogin__card[data-mode="login"] .vsmsLogin__form { transform: translateX(100%); }
+.vsmsLogin__card[data-mode="register"] .vsmsLogin__form { transform: translateX(0); }
+.vsmsLogin__formContents { display: grid; align-content: center; gap: 18px; animation: vsmsLogin-form-enter .45s ease both; }
+.vsmsLogin__formHeading { display: grid; gap: 5px; margin-bottom: 2px; }
+.vsmsLogin__formHeading h2 { font-size: 29px; line-height: 1.16; }
+.vsmsLogin__formHeading p { max-width: 36ch; }
+.vsmsLogin__field { display: grid; gap: 7px; min-width: 0; }
+.vsmsLogin__field > label { color: var(--login-fg); font-size: 13px; font-weight: 500; }
+.vsmsLogin__field > span { color: var(--login-fg); font-size: 13px; font-weight: 500; }
+.vsmsLogin__field > input { width: 100%; height: 44px; padding: 0 12px; border: 1px solid rgba(170, 190, 220, .25); border-radius: 8px; background: rgba(8, 12, 17, .58); color: var(--login-fg); outline: none; }
+.vsmsLogin__field > input:focus { border-color: var(--login-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--login-accent) 20%, transparent); }
+.vsmsLogin__registerGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.vsmsLogin__spanTwo { grid-column: 1 / -1; }
+.vsmsLogin__centerFields { min-width: 0; margin: 0; padding: 12px; display: grid; gap: 12px; border: 1px solid var(--login-line); border-radius: 9px; }
+.vsmsLogin__centerFields legend { padding: 0 6px; color: var(--login-muted); font-size: 12px; font-weight: 600; }
+.vsmsLogin__control { position: relative; display: flex; align-items: center; }
+.vsmsLogin__control > svg { position: absolute; left: 14px; color: var(--login-faint); pointer-events: none; }
+.vsmsLogin__control input { width: 100%; height: 48px; padding: 0 48px 0 44px; border: 1px solid rgba(170, 190, 220, .25); border-radius: 9px; background: rgba(8, 12, 17, .58); color: var(--login-fg); outline: none; transition: border-color .2s, box-shadow .2s; }
+.vsmsLogin__control input::placeholder { color: var(--login-faint); }
+.vsmsLogin__control input:focus { border-color: var(--login-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--login-accent) 20%, transparent); }
+.vsmsLogin__passwordToggle { position: absolute; right: 5px; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 7px; background: transparent; color: var(--login-muted); cursor: pointer; }
+.vsmsLogin__passwordToggle:hover { background: rgba(255,255,255,.07); color: var(--login-fg); }
+.vsmsLogin__passwordToggle svg { width: 18px; height: 18px; }
+.vsmsLogin__error { padding: 11px 13px; border: 1px solid rgba(255, 99, 99, .4); border-radius: 8px; background: rgba(255, 99, 99, .12); color: #ffd2d2; font-size: 13px; }
+.vsmsLogin__submit { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 18px; border: 0; border-radius: 9px; background: var(--login-accent); color: #fff; font-weight: 600; cursor: pointer; box-shadow: 0 8px 22px -10px var(--login-accent); transition: filter .2s, transform .15s; }
+.vsmsLogin__submit:hover:not(:disabled) { filter: brightness(1.1); }
+.vsmsLogin__submit:active:not(:disabled) { transform: translateY(1px); }
+.vsmsLogin__submit:disabled { opacity: .7; cursor: progress; }
+.vsmsLogin__submit svg { width: 18px; height: 18px; }
+.vsmsLogin__register { color: var(--login-muted); text-align: center; font-size: 13px; }
+.vsmsLogin__register button { padding: 0; border: 0; background: none; color: var(--login-accent); font-weight: 600; cursor: pointer; }
+.vsmsLogin__register button:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.vsmsLogin__visual { position: absolute; z-index: 2; inset: 0 auto 0 0; width: 50%; min-height: 100%; overflow: hidden; background: #111923; pointer-events: none; transition: transform .8s cubic-bezier(.75, 0, .2, 1); }
+.vsmsLogin__card[data-mode="login"] .vsmsLogin__visual { transform: translateX(0); }
+.vsmsLogin__card[data-mode="register"] .vsmsLogin__visual { transform: translateX(100%); }
+.vsmsLogin__visual > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: vsmsLogin-photo-in .7s ease both; }
+.vsmsLogin__visualShade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 11, 15, .04) 28%, rgba(8, 11, 15, .45) 57%, rgba(8, 11, 15, .94) 100%); }
+.vsmsLogin__visualCopy { position: absolute; right: 32px; bottom: 34px; left: 32px; display: grid; justify-items: start; gap: 12px; }
+.vsmsLogin__visualTag { padding: 6px 10px; border-radius: 6px; background: var(--login-accent); color: #fff; font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.vsmsLogin__visualCopy h3 { max-width: 19ch; font-size: 25px; line-height: 1.18; }
+.vsmsLogin__visualCopy p { max-width: 38ch; color: #d4dce7; font-size: 13px; }
+.vsmsLogin__chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.vsmsLogin__chips span { padding: 5px 9px; border: 1px solid rgba(255,255,255,.19); border-radius: 6px; background: rgba(10, 14, 19, .65); color: #e5ebf2; font-size: 11px; backdrop-filter: blur(6px); }
+.vsmsLogin__footnote { display: flex; align-items: center; justify-content: center; gap: 9px; color: var(--login-muted); font-size: 12px; text-align: center; }
+.vsmsLogin__footnote > span { width: 17px; height: 17px; display: grid; place-items: center; border: 1px solid var(--login-muted); border-radius: 50%; font: 600 11px/1 "IBM Plex Sans", sans-serif; }
+
+@keyframes vsmsLogin-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes vsmsLogin-photo-in { from { opacity: .5; transform: scale(1.035); } to { opacity: 1; transform: scale(1); } }
+@keyframes vsmsLogin-form-enter { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes vsmsLogin-slide-from-right { from { opacity: 0; transform: translateX(64px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes vsmsLogin-slide-from-left { from { opacity: 0; transform: translateX(-64px); } to { opacity: 1; transform: translateX(0); } }
+
+@media (max-width: 800px) {
+  .vsmsLogin { padding-right: 18px; padding-left: 18px; }
+  .vsmsLogin__main { margin: 28px auto; }
+  .vsmsLogin__card,
+  .vsmsLogin__card[data-mode="register"],
+  .vsmsLogin__card[data-mode="register"][data-portal="center"] { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); }
+  .vsmsLogin__visual,
+  .vsmsLogin__card[data-mode="login"] .vsmsLogin__visual,
+  .vsmsLogin__card[data-mode="register"] .vsmsLogin__visual { position: relative; inset: auto; width: 100%; min-height: 250px; grid-row: 1; transform: none; }
+  .vsmsLogin__visualCopy { right: 24px; bottom: 22px; left: 24px; gap: 8px; }
+  .vsmsLogin__visualCopy h3 { max-width: 28ch; font-size: 21px; }
+  .vsmsLogin__visualCopy p { display: none; }
+  .vsmsLogin__form,
+  .vsmsLogin__card[data-mode="login"] .vsmsLogin__form,
+  .vsmsLogin__card[data-mode="register"] .vsmsLogin__form { grid-column: 1; grid-row: 2; width: 100%; height: auto; min-height: 0; padding: 30px clamp(22px, 7vw, 44px); transform: none; }
+  .vsmsLogin__card[data-mode="register"] .vsmsLogin__formContents { animation-name: vsmsLogin-slide-from-right; }
+  .vsmsLogin__card[data-mode="login"] .vsmsLogin__formContents { animation-name: vsmsLogin-slide-from-left; }
+}
+
+@media (max-width: 560px) {
+  .vsmsLogin { padding: 0 14px 20px; }
+  .vsmsLogin__header { min-height: 66px; }
+  .vsmsLogin__brand { gap: 9px; }
+  .vsmsLogin__brandMark { width: 35px; height: 35px; }
+  .vsmsLogin__brand b { max-width: 220px; font-size: 13px; }
+  .vsmsLogin__brand small { font-size: 10px; }
+  .vsmsLogin__headerTag { display: none; }
+  .vsmsLogin__main { margin: 24px auto; gap: 14px; }
+  .vsmsLogin__intro { align-items: center; flex-direction: column; text-align: center; }
+  .vsmsLogin__intro h1 { font-size: 25px; }
+  .vsmsLogin__intro p { font-size: 13px; }
+  .vsmsLogin__tabs { width: 100%; }
+  .vsmsLogin__tabs button { flex: 1; min-width: 0; padding: 0 8px; font-size: 12px; }
+  .vsmsLogin__card { border-radius: 12px; }
+  .vsmsLogin__visual { min-height: 210px; }
+  .vsmsLogin__visualCopy { right: 18px; bottom: 17px; left: 18px; }
+  .vsmsLogin__visualCopy h3 { font-size: 19px; }
+  .vsmsLogin__chips span { padding: 4px 7px; font-size: 10px; }
+  .vsmsLogin__form { gap: 16px; padding: 25px 19px; }
+  .vsmsLogin__formContents { gap: 15px; }
+  .vsmsLogin__registerGrid { grid-template-columns: minmax(0, 1fr); }
+  .vsmsLogin__spanTwo { grid-column: 1; }
+  .vsmsLogin__formContents { gap: 15px; }
+  .vsmsLogin__registerGrid { grid-template-columns: minmax(0, 1fr); }
+  .vsmsLogin__spanTwo { grid-column: 1; }
+  .vsmsLogin__formHeading h2 { font-size: 25px; }
+  .vsmsLogin__footnote { align-items: flex-start; font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vsmsLogin *, .vsmsLogin *::before, .vsmsLogin *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

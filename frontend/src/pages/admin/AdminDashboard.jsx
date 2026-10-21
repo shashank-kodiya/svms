@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <Layout title="Platform overview" subtitle="Verify service centers before customers can see them.">
+    <Layout className="admin-dashboard" title="Platform overview" subtitle="Verify service centers before customers can see them.">
       <div className="stats">
         <div className="stat"><span className="k">Customers</span><span className="v">{stats?.customers ?? '—'}</span></div>
         <div className="stat"><span className="k">Verified centers</span><span className="v">{stats?.verifiedCenters ?? '—'}</span></div>

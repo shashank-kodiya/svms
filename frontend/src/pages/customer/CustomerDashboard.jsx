@@ -8,6 +8,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import api, { errorMessage } from '../../api/client.js';
 import { DOC_LABELS, docStatus, fmtKm } from '../../utils/format.js';
 import { localDate, niceDate, niceTime, statusLabel, statusTone } from '../../utils/booking.js';
+import bikeHeroVideo from '../../assets/login/bike-film-30s-landscape.mp4';
+import './CustomerDashboard.css';
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -35,7 +37,31 @@ export default function CustomerDashboard() {
   );
 
   return (
-    <Layout title={`Hello, ${user.name}`} subtitle="Your vehicles and what needs attention.">
+    <Layout className="customer-dashboard" title={`Hello, ${user.name}`} subtitle="Your vehicles and what needs attention.">
+      <section className="customer-dashboard__hero" aria-label="Customer dashboard overview">
+        <div className="customer-dashboard__visual">
+          <video className="customer-dashboard__video" autoPlay loop muted playsInline src={bikeHeroVideo} />
+          <div className="customer-dashboard__visualShade" />
+          <div className="customer-dashboard__visualCopy">
+            <p>Book a service, follow repairs, and keep your vehicle records together.</p>
+            <div className="customer-dashboard__chips"><span>Online booking</span><span>Repair updates</span><span>Service history</span></div>
+          </div>
+        </div>
+        <div className="customer-dashboard__welcome">
+          <span className="customer-dashboard__eyebrow">Customer dashboard</span>
+          <p>Pick up where you left off or plan your next visit.</p>
+          <div className="customer-dashboard__actions">
+            <Link className="btn primary" to="/customer/book">Book a service <span aria-hidden="true">→</span></Link>
+            <Link className="btn" to="/customer/vehicles">My vehicles</Link>
+          </div>
+          <div className="customer-dashboard__next">
+            <span className="customer-dashboard__eyebrow">Next booking</span>
+            {next ? <><b>{niceDate(next.date)} · {niceTime(next.slot)}</b><span>{next.center?.name} · {next.vehicleSnapshot?.model}</span></> : <><b>{next === null ? 'No upcoming visits' : 'Checking your bookings…'}</b><span>{next === null ? 'Ready when you are.' : 'Your latest booking will appear here.'}</span></>}
+            <Link to="/customer/bookings">View bookings <span aria-hidden="true">→</span></Link>
+          </div>
+        </div>
+      </section>
+
       {error && <div className="alert bad">{error}</div>}
       {toDecide.map((b) => (
         <div key={b._id} className="alert warn">

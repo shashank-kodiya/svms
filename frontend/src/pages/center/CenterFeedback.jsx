@@ -4,6 +4,7 @@ import Notice from '../../components/Notice.jsx';
 import ComplaintThread from '../../components/ComplaintThread.jsx';
 import { Stars } from '../../components/Stars.jsx';
 import api, { errorMessage } from '../../api/client.js';
+import './CenterFeedback.css';
 
 function ReviewRow({ r, onSaved }) {
   const [text, setText] = useState(r.reply?.text || '');
@@ -45,10 +46,11 @@ export default function CenterFeedback() {
   const openCount = (complaints || []).filter((c) => c.isOpen).length;
   return (
     <Layout title="Reviews & complaints" subtitle="What customers say about your center. Reply quickly: it builds trust.">
+      <div className="center-feedback">
       {error && <div className="alert bad">{error}</div>}
       <div className="stats">
-        <div className="stat"><span className="k">Average rating</span><span className="v">{reviews ? (reviews.ratingCount ? reviews.ratingAvg.toFixed(1) : '—') : '…'}</span><span className="s">{reviews ? `${reviews.ratingCount} review${reviews.ratingCount === 1 ? '' : 's'}` : ''}</span></div>
-        <div className="stat"><span className="k">Open complaints</span><span className="v">{complaints ? openCount : '…'}</span><span className="s">Respond within a day</span></div>
+        <div className="stat center-feedback__stat"><span className="k">Average rating</span><span className="v">{reviews ? (reviews.ratingCount ? reviews.ratingAvg.toFixed(1) : '—') : '…'}</span><span className="s">{reviews ? `${reviews.ratingCount} review${reviews.ratingCount === 1 ? '' : 's'}` : ''}</span></div>
+        <div className="stat center-feedback__stat"><span className="k">Open complaints</span><span className="v">{complaints ? openCount : '…'}</span><span className="s">Respond within a day</span></div>
       </div>
       <div className="seg">
         {[['complaints', `Complaints${openCount ? ` (${openCount})` : ''}`], ['reviews', 'Reviews']].map(([k, t]) => <button key={k} type="button" aria-pressed={tab === k} onClick={() => setTab(k)}>{t}</button>)}
@@ -69,6 +71,7 @@ export default function CenterFeedback() {
           {reviews?.reviews.map((r) => <ReviewRow key={r._id} r={r} onSaved={load} />)}
         </div>
       )}
+      </div>
     </Layout>
   );
 }

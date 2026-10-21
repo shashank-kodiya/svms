@@ -3,6 +3,7 @@ import Layout from '../../components/Layout.jsx';
 import Notice from '../../components/Notice.jsx';
 import PaymentRequests from '../../components/PaymentRequests.jsx';
 import api, { errorMessage } from '../../api/client.js';
+import './CenterPayments.css';
 
 export default function CenterPayments() {
   const [form, setForm] = useState(null);
@@ -31,7 +32,8 @@ export default function CenterPayments() {
 
   return (
     <Layout title="Payments" subtitle="Take UPI payments from customers and confirm them here.">
-      <div className="card">
+      <div className="center-payments">
+      <div className="card center-payments__card">
         <h3>Online payment settings</h3>
         {!form ? <p className="muted">Loading…</p> : (
           <form className="list" onSubmit={save} noValidate>
@@ -47,9 +49,10 @@ export default function CenterPayments() {
         <Notice msg={msg} />
       </div>
 
-      <div className="card">
+      <div className="card center-payments__card">
         <h3>Payments waiting for you</h3>
         <PaymentRequests />
+      </div>
       </div>
     </Layout>
   );

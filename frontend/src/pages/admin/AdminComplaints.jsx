@@ -17,7 +17,7 @@ export default function AdminComplaints() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <Layout title="Complaints" subtitle="Customer complaints about service centers. Step in when a center does not respond.">
+    <Layout className="admin-complaints" title="Complaints" subtitle="Customer complaints about service centers. Step in when a center does not respond.">
       <div className="seg">
         {FILTERS.map(([k, t]) => <button key={k || 'all'} type="button" aria-pressed={status === k} onClick={() => setStatus(k)}>{t}</button>)}
       </div>

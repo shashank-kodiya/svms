@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import api from '../../api/client.js';
+import centerTruck from '../../assets/login/service-center-tow-truck.jpg';
+import './CenterDashboard.css';
 
 const STATUS_TEXT = {
   pending: ['warn', 'Waiting for admin verification', 'You can finish your setup now. Customers will see your center once the admin verifies it.'],
@@ -33,10 +35,31 @@ export default function CenterDashboard() {
 
   return (
     <Layout title={center?.name || 'Service Center'} subtitle={center ? `${center.address}, ${center.city} ${center.pincode}` : ''}>
-      <div className={`alert ${tone}`}>
-        <span><b>{label}.</b> {help}</span>
-        {center?.verificationNote && <span className="small">Admin note: {center.verificationNote}</span>}
-      </div>
+      <section className="center-dashboard__hero" aria-label="Service center overview">
+        <div className="center-dashboard__visual">
+          <img src={centerTruck} alt="Tow truck transporting a car" />
+          <div className="center-dashboard__visualShade" />
+          <div className="center-dashboard__visualCopy">
+            <p>Coordinate bookings, technicians, and customer updates.</p>
+            <div className="center-dashboard__chips"><span>Job cards</span><span>Bay planning</span><span>Customer updates</span></div>
+          </div>
+        </div>
+        <div className="center-dashboard__welcome">
+          <span className="center-dashboard__eyebrow">Service center portal</span>
+          <h2>Run your workshop from one place.</h2>
+          <p>Review incoming work and keep today's jobs moving.</p>
+          <div className="center-dashboard__actions">
+            <Link className="btn primary" to="/center/bookings">View bookings <span aria-hidden="true">→</span></Link>
+            <Link className="btn" to="/center/jobs">Open workshop</Link>
+          </div>
+          <div className="center-dashboard__status" role="status">
+            <span className="center-dashboard__eyebrow">Center status</span>
+            <b><span className={`chip ${tone}`}>{label}</span></b>
+            <span>{help}</span>
+            {center?.verificationNote && <span className="center-dashboard__adminNote">Admin note: {center.verificationNote}</span>}
+          </div>
+        </div>
+      </section>
 
       {bs?.pending > 0 && (
         <div className="alert warn"><span><b>{bs.pending} booking request{bs.pending > 1 ? 's' : ''} waiting.</b> <Link to="/center/bookings">Review them</Link></span></div>

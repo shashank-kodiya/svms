@@ -1,0 +1,61 @@
+.admin-portal .page .card,
+.admin-portal .page .stat,
+.admin-portal .page .item,
+.admin-portal .page .rec {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.admin-portal .page .card:hover,
+.admin-portal .page .stat:hover,
+.admin-portal .page .item:hover,
+.admin-portal .page .rec:hover {
+  transform: translateY(-3px);
+  border-color: #6bc992;
+  box-shadow: 0 14px 28px -20px rgba(107, 201, 146, .82), 0 0 14px -8px rgba(107, 201, 146, .7);
+}
+
+.admin-portal.admin-complaints .page .card.inner:hover {
+  transform: translateY(-3px);
+  border-color: #6bc992;
+  box-shadow: 0 14px 28px -20px rgba(107, 201, 146, .82), 0 0 14px -8px rgba(107, 201, 146, .7);
+}
+
+.admin-portal .page .stat:hover {
+  background: var(--surface);
+}
+
+.admin-portal .page .seg {
+  border: 1px solid var(--line);
+  background: #0b1016;
+}
+
+.admin-portal .page .seg button[aria-pressed="true"] {
+  background: #2f9d63;
+  color: #fff;
+  box-shadow: 0 5px 16px -8px rgba(107, 201, 146, .8);
+}
+
+.admin-portal .page .btn:not(.primary):hover {
+  border-color: #6bc992;
+  box-shadow: 0 8px 20px -14px rgba(107, 201, 146, .72);
+}
+
+.admin-portal .page tbody tr:hover {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-portal .page .card,
+  .admin-portal .page .stat,
+  .admin-portal .page .item,
+  .admin-portal .page .rec {
+    transition: none;
+  }
+
+  .admin-portal .page .card:hover,
+  .admin-portal .page .stat:hover,
+  .admin-portal .page .item:hover,
+  .admin-portal .page .rec:hover {
+    transform: none;
+  }
+}

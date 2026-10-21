@@ -1,5 +1,6 @@
 import Layout from '../../components/Layout.jsx';
 import RevenueView from '../../components/RevenueView.jsx';
+import './CenterRevenue.css';
 
 export default function CenterRevenue() {
   return (

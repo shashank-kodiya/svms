@@ -4,8 +4,9 @@ import useGoogleMaps from '../hooks/useGoogleMaps.js';
 const COLORS = { center: '#0b6b4f', picked: '#d97706', place: '#6b7280', me: '#2563eb' };
 
 // A Google map with numbered markers. markers: [{ id, lat, lng, title, label, tone: 'center' | 'place' }].
-// `user` is the customer's own point. Click a marker to call onSelect(id). Shows nothing but a hint if Google is not set up.
-export default function MapView({ markers = [], user = null, selectedId = null, onSelect, height = 340 }) {
+// `user` is the customer's own point. `route` can be { from, to } and draws a route line on the map.
+// Click a marker to call onSelect(id). Shows nothing but a hint if Google is not set up.
+export default function MapView({ markers = [], user = null, selectedId = null, onSelect, route = null, height = 340 }) {
   const { enabled, ready, error } = useGoogleMaps();
   const box = useRef(null);
   const map = useRef(null);
@@ -39,20 +40,39 @@ export default function MapView({ markers = [], user = null, selectedId = null, 
     if (user) {
       drawn.current.push(new g.Marker({ map: map.current, position: user, title: 'You are here', icon: dot(COLORS.me, 8), zIndex: 20 }));
     }
+    if (route && Number.isFinite(route.from?.lat) && Number.isFinite(route.from?.lng) && Number.isFinite(route.to?.lat) && Number.isFinite(route.to?.lng)) {
+      const path = new g.Polyline({
+        map: map.current,
+        path: [
+          { lat: route.from.lat, lng: route.from.lng },
+          { lat: route.to.lat, lng: route.to.lng }
+        ],
+        strokeColor: '#4f8ef7',
+        strokeOpacity: 0.95,
+        strokeWeight: 4,
+        geodesic: true
+      });
+      drawn.current.push(path);
+    }
 
     // Zoom to fit everything, but only when the set of points changes (so clicking a marker doesn't re-zoom).
-    const sig = JSON.stringify([markers.map((m) => [m.id, m.lat, m.lng]), user]);
+    const sig = JSON.stringify([markers.map((m) => [m.id, m.lat, m.lng]), user, route]);
     if (sig !== lastFit.current) {
       lastFit.current = sig;
       const pts = [...markers, ...(user ? [user] : [])].filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
-      if (pts.length === 1) { map.current.setCenter(pts[0]); map.current.setZoom(14); }
+      if (route && Number.isFinite(route.from?.lat) && Number.isFinite(route.from?.lng) && Number.isFinite(route.to?.lat) && Number.isFinite(route.to?.lng)) {
+        const b = new g.LatLngBounds();
+        b.extend({ lat: route.from.lat, lng: route.from.lng });
+        b.extend({ lat: route.to.lat, lng: route.to.lng });
+        map.current.fitBounds(b, 80);
+      } else if (pts.length === 1) { map.current.setCenter(pts[0]); map.current.setZoom(14); }
       else if (pts.length > 1) {
         const b = new g.LatLngBounds();
         pts.forEach((p) => b.extend({ lat: p.lat, lng: p.lng }));
         map.current.fitBounds(b, 48);
       }
     }
-  }, [ready, markers, user, selectedId, onSelect]);
+  }, [ready, markers, user, selectedId, onSelect, route]);
 
   if (!enabled) return <div className="map-note small muted">The map is not set up on this website yet (it needs a Google Maps key). The list below still shows each center’s distance.</div>;
   if (error) return <div className="alert warn">{error}</div>;

@@ -1,0 +1,122 @@
+.book-service-page {
+  --bg: #0c1015;
+  --surface: rgba(18, 24, 32, .88);
+  --sunk: #1c2531;
+  --ink: #e9eef5;
+  --muted: #a2adbd;
+  --line: rgba(170, 190, 220, .2);
+  --accent: #347dff;
+  --accent-ink: #fff;
+  --accent-soft: rgba(52, 125, 255, .18);
+  --good: #38cf8b;
+  --good-soft: rgba(56, 207, 139, .15);
+  --warn: #f4b740;
+  --warn-soft: rgba(244, 183, 64, .15);
+  --bad: #ff6363;
+  --bad-soft: rgba(255, 99, 99, .14);
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  color-scheme: dark;
+  background: transparent;
+  color: var(--ink);
+}
+
+.book-service-page::before,
+.book-service-page::after {
+  position: fixed;
+  z-index: -1;
+  content: '';
+  pointer-events: none;
+}
+
+.book-service-page::before {
+  inset: -32px;
+  background: url('../../assets/login/customer-garage.jpg') center 55% / cover no-repeat;
+  filter: blur(25px) saturate(.9) brightness(.35);
+  animation: book-background-reveal 1s ease both;
+}
+
+.book-service-page::after {
+  inset: 0;
+  background: linear-gradient(115deg, rgba(8, 12, 17, .78), rgba(8, 12, 17, .54) 55%, rgba(8, 12, 17, .76));
+  animation: book-overlay-reveal .65s ease both;
+}
+
+.book-service-page .page-head { animation: book-content-enter .5s ease both; }
+.book-service-page .page > .card { animation: book-content-enter .55s ease .08s both; }
+.book-service-page .page > .row,
+.book-service-page .page > .map-wrap { animation: book-content-enter .5s ease .12s both; }
+.book-service-page .result { animation: book-content-enter .45s ease both; }
+.book-service-page .confirm-bar { animation: book-content-enter .4s ease both; }
+
+@keyframes book-background-reveal {
+  from { opacity: .55; transform: scale(1.035); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes book-overlay-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes book-content-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.book-service-page .topbar {
+  background: rgba(18, 24, 32, .86);
+  border-color: rgba(170, 190, 220, .16);
+  backdrop-filter: blur(16px);
+}
+
+.book-service-page .card,
+.book-service-page .stat {
+  background: var(--surface);
+  border-color: var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.book-service-page .page-head h1 { color: var(--ink); }
+.book-service-page .nav a.active { color: var(--ink); }
+.book-service-page .field input,
+.book-service-page .field select,
+.book-service-page .field textarea,
+.book-service-page table input {
+  color: var(--ink);
+  background: rgba(8, 12, 17, .55);
+  border-color: rgba(170, 190, 220, .24);
+}
+
+.book-service-page .field input:focus,
+.book-service-page .field select:focus,
+.book-service-page .field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.book-service-page .seg { background: rgba(8, 12, 17, .6); }
+.book-service-page .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); }
+.book-service-page .chip.info { background: rgba(52, 125, 255, .18); color: #a9caff; }
+.book-service-page .alert.info { background: rgba(52, 125, 255, .16); color: #c7dcff; }
+.book-service-page .confirm-bar { box-shadow: 0 8px 28px rgba(0, 0, 0, .38); }
+
+@media (max-width: 700px) {
+  .book-service-page .topbar { padding: 10px 14px; }
+  .book-service-page .page { padding-top: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-service-page::before,
+  .book-service-page::after,
+  .book-service-page .page-head,
+  .book-service-page .page > .card,
+  .book-service-page .page > .row,
+  .book-service-page .page > .map-wrap,
+  .book-service-page .result,
+  .book-service-page .confirm-bar {
+    animation-duration: .01ms !important;
+    animation-delay: 0s !important;
+  }
+}

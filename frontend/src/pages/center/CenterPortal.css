@@ -1,0 +1,97 @@
+.center-portal .card,
+.center-portal .stat,
+.center-portal .item,
+.center-portal .rec,
+.center-portal .center-dashboard__status,
+.center-portal .sched-row,
+.center-portal .checklist li {
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.center-portal .card:hover,
+.center-portal .stat:hover,
+.center-portal .item:hover,
+.center-portal .rec:hover {
+  transform: translateY(-3px);
+  border-color: #ffab65;
+  box-shadow: 0 14px 28px -20px rgba(242, 138, 53, .8), 0 0 14px -8px rgba(242, 138, 53, .7);
+}
+
+.center-portal .stat:hover {
+background: var(--surface);
+}
+
+.center-portal .item,
+.center-portal .rec {
+border-color: var(--line);
+background: #0d131a;
+}
+
+.center-portal .seg {
+  border: 1px solid var(--line);
+  background: #0b1016;
+}
+
+.center-portal .seg button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 5px 16px -8px var(--accent);
+}
+
+.center-portal .btn:not(.primary):hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 20px -14px rgba(242, 138, 53, .7);
+}
+
+.center-portal .btn.good:hover {
+  border-color: var(--good);
+}
+
+.center-portal .btn.bad:hover {
+  border-color: var(--bad);
+}
+
+.center-portal input[type="checkbox"],
+.center-portal input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+.center-portal .center-dashboard__hero {
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.center-portal .center-dashboard__hero:hover,
+.center-portal .center-dashboard__status:hover {
+  border-color: rgba(242, 138, 53, .6);
+  box-shadow: 0 16px 34px -24px rgba(242, 138, 53, .65);
+}
+
+.center-portal .sched-row:hover,
+.center-portal .checklist li:hover {
+  border-color: rgba(242, 138, 53, .5);
+  box-shadow: 0 10px 20px -16px rgba(242, 138, 53, .75);
+}
+
+.center-portal .empty {
+  background: rgba(17, 24, 32, .72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .center-portal .card,
+  .center-portal .stat,
+  .center-portal .item,
+  .center-portal .rec,
+  .center-portal .center-dashboard__status,
+  .center-portal .center-dashboard__hero,
+  .center-portal .sched-row,
+  .center-portal .checklist li {
+    transition: none;
+  }
+
+  .center-portal .card:hover,
+  .center-portal .stat:hover,
+  .center-portal .item:hover,
+  .center-portal .rec:hover {
+    transform: none;
+  }
+}
