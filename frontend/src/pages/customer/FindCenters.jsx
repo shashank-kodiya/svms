@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout.jsx';
 import MapView from '../../components/MapView.jsx';
-import RouteInfo from '../../components/RouteInfo.jsx';
+import DirectionsBar, { useCenterRoute } from '../../components/DirectionsBar.jsx';
 import { Stars } from '../../components/Stars.jsx';
 import api, { errorMessage } from '../../api/client.js';
 import useMyLocation from '../../hooks/useMyLocation.js';
@@ -41,8 +41,17 @@ export default function FindCenters() {
     document.getElementById(`c-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
+  // Clicking a center in the list: show the route to it on the map (asking for the customer's location if needed).
+  const showDirections = useCallback((id) => {
+    setSelected(id);
+    document.getElementById('find-map')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!loc && !asking) ask();
+  }, [loc, asking, ask]);
+
   const selectedCenter = useMemo(() => centers.find((c) => c._id === selected) || null, [centers, selected]);
-  const routeToSelected = selectedCenter && loc ? { from: loc, to: { lat: selectedCenter.lat, lng: selectedCenter.lng } } : null;
+
+  // Road route to the selected center (path, distance and time), drawn on the map like Google Maps.
+  const { data: routeData, route: routeToSelected } = useCenterRoute(selectedCenter, loc);
 
   return (
     <Layout title="Find centers" subtitle="Verified service centers on the map. Share your location to see how far each one is.">
@@ -54,7 +63,7 @@ export default function FindCenters() {
             {loc && (
               <label className="field inline"><span>Within</span>
                 <select value={radius} onChange={(e) => setRadius(Number(e.target.value))}>
-                  {[5, 10, 25, 50].map((r) => <option key={r} value={r}>{r} km</option>)}
+                  {[5, 10, 25, 50, 100, 200, 300].map((r) => <option key={r} value={r}>{r} km</option>)}
                 </select>
               </label>
             )}
@@ -66,7 +75,10 @@ export default function FindCenters() {
         <p className="small muted">Your location is used only to work out distances in this browser tab. It is not saved.</p>
       </div>
 
-      <MapView markers={markers} user={loc} selectedId={selected} onSelect={select} route={routeToSelected} />
+      <div id="find-map" className="directions-wrap">
+        <DirectionsBar center={selectedCenter} from={loc} data={routeData} asking={asking} onAsk={ask} onClose={() => setSelected(null)} />
+        <MapView markers={markers} user={loc} selectedId={selected} onSelect={select} route={routeToSelected} />
+      </div>
 
       {data && centers.length === 0 && (
         <div className="empty">{loc ? `No verified center with a map location within ${radius} km.` : 'No verified center has set its map location yet.'}</div>
@@ -74,7 +86,7 @@ export default function FindCenters() {
 
       <div className="list">
         {centers.map((c, i) => (
-          <div key={c._id} id={`c-${c._id}`} className={`card result ${selected === c._id ? 'sel' : ''}`} onClick={() => setSelected(c._id)}>
+          <div key={c._id} id={`c-${c._id}`} className={`card result ${selected === c._id ? 'sel' : ''}`} onClick={() => showDirections(c._id)} style={{ cursor: 'pointer' }}>
             <div className="row between">
               <div>
                 <h3><span className="num-dot">{i + 1}</span> {c.name}</h3>
@@ -85,8 +97,9 @@ export default function FindCenters() {
               {c.distanceKm != null && <div className="price"><b>{c.distanceKm} km</b><span className="small muted">straight line</span></div>}
             </div>
             <div className="row">
-              <RouteInfo centerId={c._id} from={loc} autoFetch={selected === c._id} />
-              <Link className="btn primary sm" to="/customer/book">Book a service</Link>
+              <Link className="btn sm" to={`/customer/centers/${c._id}`} onClick={(e) => e.stopPropagation()}>More details</Link>
+              <button type="button" className="btn sm" onClick={(e) => { e.stopPropagation(); showDirections(c._id); }}>Show directions</button>
+              <Link className="btn primary sm" to="/customer/book" onClick={(e) => e.stopPropagation()}>Book a service</Link>
             </div>
           </div>
         ))}

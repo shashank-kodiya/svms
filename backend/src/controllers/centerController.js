@@ -1,5 +1,6 @@
-import ServiceCenter from '../models/ServiceCenter.js';
+import ServiceCenter, { MAX_CENTER_PHOTOS } from '../models/ServiceCenter.js';
 import Mechanic from '../models/Mechanic.js';
+import { cloudinaryReady, uploadImage, deleteImage } from '../config/cloudinary.js';
 import AppError, { asyncHandler } from '../utils/AppError.js';
 import { BRANDS } from '../constants/vehicles.js';
 import { serviceByKey } from '../constants/services.js';
@@ -29,6 +30,46 @@ export const updateProfile = asyncHandler(async (req, res) => {
   }
   if (req.body.gstin !== undefined) center.gstin = req.body.gstin || undefined; // Phase 6: printed on invoices
   await center.save();
+  res.json(center);
+});
+
+// ---------- showroom photos ----------
+// POST /photos   multipart: image, caption   (the first photo becomes the cover)
+export const addPhoto = asyncHandler(async (req, res) => {
+  const center = await myCenter(req);
+  if (center.photos.length >= MAX_CENTER_PHOTOS) throw new AppError(`You can add up to ${MAX_CENTER_PHOTOS} photos. Remove one first.`, 422);
+  if (!req.file) throw new AppError('Choose a photo to upload.', 400);
+  if (!cloudinaryReady()) throw new AppError('Photo upload is not set up yet. Add the Cloudinary keys to backend/.env.', 503);
+  const result = await uploadImage(req.file.buffer, `svms/centers/${center._id}`);
+  center.photos.push({
+    url: result.secure_url,
+    publicId: result.public_id,
+    caption: String(req.body.caption || '').trim().slice(0, 120),
+    isCover: !center.photos.some((p) => p.isCover)
+  });
+  await center.save();
+  res.status(201).json(center);
+});
+
+// PATCH /photos/:photoId/cover
+export const setCoverPhoto = asyncHandler(async (req, res) => {
+  const center = await myCenter(req);
+  if (!center.photos.id(req.params.photoId)) throw new AppError('Photo not found.', 404);
+  center.photos.forEach((p) => { p.isCover = p._id.equals(req.params.photoId); });
+  await center.save();
+  res.json(center);
+});
+
+// DELETE /photos/:photoId   (if it was the cover, the next photo becomes the cover)
+export const deletePhoto = asyncHandler(async (req, res) => {
+  const center = await myCenter(req);
+  const p = center.photos.id(req.params.photoId);
+  if (!p) throw new AppError('Photo not found.', 404);
+  const { publicId } = p;
+  center.photos = center.photos.filter((x) => !x._id.equals(p._id));
+  if (center.photos.length && !center.photos.some((x) => x.isCover)) center.photos[0].isCover = true;
+  await center.save();
+  await deleteImage(publicId);
   res.json(center);
 });
 

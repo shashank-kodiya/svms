@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import api, { errorMessage } from '../api/client.js';
 
+export const formatTravelTime = (minutes) => {
+  const totalMinutes = Math.max(0, Number(minutes) || 0);
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+
+  if (hours === 0) return `${mins} min`;
+  if (mins === 0) return `${hours} hr`;
+  return `${hours} hr ${mins} min`;
+};
+
 // "How far by road, and how long?" for one center, from the customer's location.
 export default function RouteInfo({ centerId, from, autoFetch = false }) {
   const [route, setRoute] = useState(null);
@@ -33,7 +43,7 @@ export default function RouteInfo({ centerId, from, autoFetch = false }) {
       {busy && <span className="muted">Checking route…</span>}
       {route && (
         <>
-          <span><b>{route.distanceKm} km</b> by road · about <b>{route.minutes} min</b>{route.estimated ? <span className="muted"> (estimate)</span> : <span className="muted"> (with traffic)</span>}</span>
+          <span><b>{route.distanceKm} km</b> by road · about <b>{formatTravelTime(route.minutes)}</b>{route.estimated ? <span className="muted"> (estimate)</span> : <span className="muted"> (with traffic)</span>}</span>
           <a className="btn ghost sm" href={route.directionsUrl} target="_blank" rel="noreferrer">Open directions</a>
         </>
       )}

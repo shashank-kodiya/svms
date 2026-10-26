@@ -1,7 +1,10 @@
-import ServiceCenter from '../models/ServiceCenter.js';
+import ServiceCenter, { publicPhotos } from '../models/ServiceCenter.js';
 import AppError, { asyncHandler } from '../utils/AppError.js';
 import { haversineKm, hasLocation, estimateRoute } from '../services/geo.js';
-import { mapsReady, geocode, drivingRoute, nearbyGarages } from '../services/maps.js';
+import { mapsReady, geocode, drivingRoute, nearbyGarages, googleListing } from '../services/maps.js';
+import { serviceByKey, DAYS } from '../constants/services.js';
+import { dayOfWeek, toMinutes } from '../utils/slots.js';
+import { nowIST, addDaysStr } from '../utils/time.js';
 
 const round1 = (n) => Math.round(n * 10) / 10;
 
@@ -14,10 +17,10 @@ export const status = (req, res) => res.json({ google: mapsReady() });
 export const centersOnMap = asyncHandler(async (req, res) => {
   const me = { lat: req.query.lat, lng: req.query.lng };
   const centers = await ServiceCenter.find({ verificationStatus: 'verified', 'location.lat': { $exists: true }, 'location.lng': { $exists: true } })
-    .select('name address city pincode phone description brands location ratingAvg ratingCount').limit(300).lean();
+    .select('name address city pincode phone description brands location ratingAvg ratingCount photos').limit(300).lean();
   let list = centers.filter(hasLocation).map((c) => ({
     _id: c._id, name: c.name, address: c.address, city: c.city, pincode: c.pincode, phone: c.phone, description: c.description,
-    brands: c.brands, ratingAvg: c.ratingAvg || 0, ratingCount: c.ratingCount || 0, lat: c.location.lat, lng: c.location.lng,
+    brands: c.brands, ratingAvg: c.ratingAvg || 0, ratingCount: c.ratingCount || 0, lat: c.location.lat, lng: c.location.lng, photos: publicPhotos(c),
     distanceKm: me.lat != null ? round1(haversineKm(me, c.location)) : null
   }));
   if (me.lat != null) {
@@ -41,6 +44,63 @@ export const routeToCenter = asyncHandler(async (req, res) => {
     console.warn(`Google Routes failed, using an estimate: ${err.message}`); // never block the customer on this
   }
   res.json({ ...estimateRoute(straightKm), straightKm: round1(straightKm), directionsUrl: directionsUrl(from, center.location) });
+});
+
+// "Open · Closes 7 PM" / "Closed · Opens 9 AM Mon", worked out from the center's own hours in Indian time.
+const clock = (hhmm) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h < 12 ? 'AM' : 'PM'}`;
+};
+function openStatus(center) {
+  const { date, minutes } = nowIST();
+  const dayHours = (d) => (center.workingHours || []).find((h) => h.day === dayOfWeek(d));
+  const holiday = (d) => (center.holidays || []).find((h) => h.date === d);
+  const today = dayHours(date);
+  if (!holiday(date) && today?.isOpen) {
+    const open = toMinutes(today.open); const close = toMinutes(today.close);
+    const bS = today.breakStart ? toMinutes(today.breakStart) : null; const bE = today.breakEnd ? toMinutes(today.breakEnd) : null;
+    if (bS !== null && bE !== null && minutes >= bS && minutes < bE) return { isOpen: false, label: `On break · Reopens ${clock(today.breakEnd)}` };
+    if (minutes >= open && minutes < close) {
+      return { isOpen: true, label: `Open · Closes ${clock(today.close)}`, closingSoon: close - minutes <= 60 };
+    }
+    if (minutes < open) return { isOpen: false, label: `Closed · Opens ${clock(today.open)}` };
+  }
+  for (let i = 1; i <= 14; i += 1) {
+    const d = addDaysStr(date, i);
+    const h = dayHours(d);
+    if (h?.isOpen && !holiday(d)) {
+      return { isOpen: false, label: `Closed · Opens ${clock(h.open)} ${i === 1 ? 'tomorrow' : DAYS[dayOfWeek(d)].slice(0, 3)}`, reason: holiday(date)?.reason };
+    }
+  }
+  return { isOpen: false, label: 'Closed' };
+}
+
+// GET /api/maps/centers/:id   Everything for the center's details page (like a Google Maps listing).
+export const centerDetails = asyncHandler(async (req, res) => {
+  const c = await ServiceCenter.findOne({ _id: req.params.id, verificationStatus: 'verified' })
+    .select('name description address city pincode phone brands services workingHours holidays location ratingAvg ratingCount photos createdAt').lean();
+  if (!c) throw new AppError('Service center not found.', 404);
+  const { date } = nowIST();
+  const located = hasLocation(c);
+  let google = null;
+  if (located) {
+    try { google = await googleListing(c.name, c.location); } catch (err) { console.warn(`Google listing failed: ${err.message}`); }
+  }
+  res.json({
+    _id: c._id, name: c.name, description: c.description, address: c.address, city: c.city, pincode: c.pincode, phone: c.phone,
+    brands: c.brands,
+    services: (c.services || []).filter((s) => s.isActive).map((s) => ({ key: s.key, name: serviceByKey(s.key)?.name || s.key, vehicleType: s.vehicleType, price: s.price, durationMins: s.durationMins, notes: s.notes })),
+    workingHours: [...(c.workingHours || [])].sort((a, b) => a.day - b.day),
+    upcomingHolidays: (c.holidays || []).filter((h) => h.date >= date).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5),
+    todayDay: dayOfWeek(date),
+    status: openStatus(c),
+    ...(located ? { lat: c.location.lat, lng: c.location.lng } : {}),
+    ratingAvg: c.ratingAvg || 0, ratingCount: c.ratingCount || 0,
+    photos: publicPhotos(c),
+    memberSince: c.createdAt,
+    google,
+    googleEnabled: mapsReady()
+  });
 });
 
 // Opens Google Maps with directions already filled in (no API key needed).
@@ -78,7 +138,7 @@ async function myCenter(req) {
 // PUT /api/center/location   body: { lat, lng }   (for example from "Use my current location" at the shop)
 export const setLocation = asyncHandler(async (req, res) => {
   const center = await myCenter(req);
-  center.location = { lat: req.body.lat, lng: req.body.lng, source: 'device' };
+  center.location = { lat: req.body.lat, lng: req.body.lng, source: req.body.source || 'device' };
   await center.save();
   res.json(center);
 });

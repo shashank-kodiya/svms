@@ -48,7 +48,7 @@ export async function drivingRoute(from, to) {
   if (hit !== undefined) return hit;
   const body = await call('https://routes.googleapis.com/directions/v2:computeRoutes', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'X-Goog-Api-Key': key(), 'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters' },
+    headers: { 'content-type': 'application/json', 'X-Goog-Api-Key': key(), 'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline' },
     body: JSON.stringify({
       origin: { location: { latLng: { latitude: from.lat, longitude: from.lng } } },
       destination: { location: { latLng: { latitude: to.lat, longitude: to.lng } } },
@@ -58,7 +58,12 @@ export async function drivingRoute(from, to) {
   });
   const r = body.routes?.[0];
   if (!r) return remember(k, null);
-  return remember(k, { distanceKm: Math.round(r.distanceMeters / 100) / 10, minutes: Math.max(1, Math.round(parseInt(r.duration, 10) / 60)), estimated: false });
+  return remember(k, {
+    distanceKm: Math.round(r.distanceMeters / 100) / 10,
+    minutes: Math.max(1, Math.round(parseInt(r.duration, 10) / 60)),
+    estimated: false,
+    polyline: r.polyline?.encodedPolyline || null   // the road path, drawn on the customer's map
+  });
 }
 
 // Car repair shops around a point (Places API New, "Nearby Search"). null if no key.
@@ -92,4 +97,67 @@ export async function nearbyGarages(at, radiusKm) {
     openNow: p.currentOpeningHours?.openNow,
     url: p.googleMapsUri
   })));
+}
+
+// The Google listing for one of our centers (Places API New, "Text Search" near the center's pin):
+// opening hours, phone, website and photos. Ratings and reviews are not used: the app shows only its own customers' reviews.
+// null if no key or no listing close to the pin.
+// Only a listing within ~300 m whose name shares a word with ours is accepted, so another business is never shown.
+export async function googleListing(name, at) {
+  if (!mapsReady()) return null;
+  const k = `listing:${name.toLowerCase()}:${at.lat.toFixed(4)},${at.lng.toFixed(4)}`;
+  const hit = recall(k);
+  if (hit !== undefined) return hit;
+  const body = await call('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'X-Goog-Api-Key': key(),
+      'X-Goog-FieldMask': [
+        'places.id', 'places.displayName', 'places.location', 'places.googleMapsUri',
+        'places.websiteUri', 'places.nationalPhoneNumber', 'places.currentOpeningHours.openNow', 'places.regularOpeningHours.weekdayDescriptions',
+        'places.photos'
+      ].join(',')
+    },
+    body: JSON.stringify({
+      textQuery: /servic/i.test(name) ? name : `${name} service`,
+      maxResultCount: 6,
+      locationBias: { circle: { center: { latitude: at.lat, longitude: at.lng }, radius: 500 } }
+    })
+  });
+  // Compare only the distinctive words of our name: not the area after " - " ("Kanchana Hyundai - Surathkal"),
+  // and not generic words, so a neighbouring business in the same area is never taken for this one.
+  const GENERIC = new Set(['sales', 'service', 'services', 'motor', 'motors', 'showroom', 'center', 'centre', 'authorised', 'authorized',
+    'dealer', 'dealership', 'the', 'and', 'pvt', 'ltd', 'private', 'limited', 'mangalore', 'mangaluru', 'car', 'cars', 'workshop']);
+  const words = (s) => new Set(String(s || '').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !GENERIC.has(w)));
+  const ours = words(name.split(' - ')[0]);
+  const needed = Math.min(2, ours.size || 1);
+  const near = (p) => {
+    const dLat = (p.location.latitude - at.lat) * 111;
+    const dLng = (p.location.longitude - at.lng) * 111 * Math.cos((at.lat * Math.PI) / 180);
+    return Math.hypot(dLat, dLng) <= 0.3;
+  };
+  const shared = (p) => [...words(p.displayName?.text)].filter((w) => ours.has(w)).length;
+  // Several listings can share a building (sales showroom and workshop): prefer the one with "service" in its name.
+  const matches = (body.places || []).filter((p) => p.location && near(p) && shared(p) >= needed);
+  const place = matches.find((p) => /servic/i.test(p.displayName?.text || '')) || matches[0];
+  if (!place) return remember(k, null);
+
+  // Photo files: ask Google for a short-lived link to each image, so the key never reaches the browser.
+  const photos = [];
+  for (const ph of (place.photos || []).slice(0, 6)) {
+    try {
+      const media = await call(`https://places.googleapis.com/v1/${ph.name}/media?maxWidthPx=1000&skipHttpRedirect=true&key=${key()}`);
+      if (media.photoUri) photos.push({ url: media.photoUri, author: ph.authorAttributions?.[0]?.displayName || '', authorUrl: ph.authorAttributions?.[0]?.uri || '' });
+    } catch { /* skip this photo */ }
+  }
+  return remember(k, {
+    name: place.displayName?.text,
+    openNow: place.currentOpeningHours?.openNow ?? null,
+    weekdayHours: place.regularOpeningHours?.weekdayDescriptions || [],
+    phone: place.nationalPhoneNumber || '',
+    website: place.websiteUri || '',
+    url: place.googleMapsUri || '',
+    photos
+  });
 }

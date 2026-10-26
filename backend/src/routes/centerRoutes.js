@@ -221,12 +221,18 @@ router.patch('/reviews/:id/reply', [param('id').isMongoId(), body('text').trim()
 router.get('/complaints', [query('status').optional().isIn(['open', 'responded', 'resolved'])], validate, fb.centerComplaints);
 router.post('/complaints/:id/messages', [param('id').isMongoId(), body('text').trim().isLength({ min: 2, max: 1000 }).withMessage('Write your response (up to 1000 characters).')], validate, fb.centerComplaintMessage);
 
+// Showroom photos customers see when they search
+router.post('/photos', handleUpload, c.addPhoto);
+router.patch('/photos/:photoId/cover', [param('photoId').isMongoId()], validate, c.setCoverPhoto);
+router.delete('/photos/:photoId', [param('photoId').isMongoId()], validate, c.deletePhoto);
+
 // Map location (Phase 9)
 router.put(
   '/location',
   [
     body('lat').isFloat({ min: -90, max: 90 }).withMessage('Latitude must be between -90 and 90.').toFloat(),
-    body('lng').isFloat({ min: -180, max: 180 }).withMessage('Longitude must be between -180 and 180.').toFloat()
+    body('lng').isFloat({ min: -180, max: 180 }).withMessage('Longitude must be between -180 and 180.').toFloat(),
+    body('source').optional().isIn(['device', 'map']).withMessage('Location source must be device or map.')
   ],
   validate,
   maps.setLocation

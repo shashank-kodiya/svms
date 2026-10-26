@@ -4,7 +4,7 @@ import Layout from '../../components/Layout.jsx';
 import Plate from '../../components/Plate.jsx';
 import SlotPicker from '../../components/SlotPicker.jsx';
 import MapView from '../../components/MapView.jsx';
-import RouteInfo from '../../components/RouteInfo.jsx';
+import DirectionsBar, { useCenterRoute } from '../../components/DirectionsBar.jsx';
 import CenterReviews from '../../components/CenterReviews.jsx';
 import { Stars } from '../../components/Stars.jsx';
 import useMyLocation from '../../hooks/useMyLocation.js';
@@ -125,6 +125,18 @@ export default function BookService() {
     document.getElementById(`center-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
+  // Directions: the focused center's road route on the map (same as Find centers).
+  const focusedCenter = useMemo(() => {
+    const r = search?.results.find((x) => String(x.center._id) === focus);
+    return r && r.center.lat != null ? { _id: focus, name: r.center.name, lat: r.center.lat, lng: r.center.lng } : null;
+  }, [search?.results, focus]);
+  const { data: routeData, route: routeToFocused } = useCenterRoute(focusedCenter, loc);
+  const showDirections = (id) => {
+    setFocus(id);
+    document.getElementById('book-map')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!loc && !asking) ask();
+  };
+
   return (
     <Layout className="book-service-page" title="Book a service" subtitle="Only verified centers that service your vehicle's brand and offer the service are shown.">
       {vehicles?.length === 0 ? (
@@ -178,7 +190,12 @@ export default function BookService() {
               </div>
             </div>
           )}
-          {markers.length > 0 && <MapView markers={markers} user={search.located ? loc : null} selectedId={focus} onSelect={focusCard} height={280} />}
+          {markers.length > 0 && (
+            <div id="book-map" className="directions-wrap">
+              <DirectionsBar center={focusedCenter} from={loc} data={routeData} asking={asking} onAsk={ask} onClose={() => setFocus(null)} />
+              <MapView markers={markers} user={loc} selectedId={focus} onSelect={focusCard} route={routeToFocused} height={focusedCenter ? 360 : 280} />
+            </div>
+          )}
           {liveNote && <div className="alert warn">{liveNote}</div>}
           {search.results.length === 0 && (
             <div className="empty">No verified center services {search.vehicle.brand} {search.vehicle.type.toLowerCase()}s for {search.service.name}{form.city ? ` in ${form.city}` : ''} yet. Try another service{form.city ? ' or clear the city' : ''}.</div>
@@ -209,7 +226,10 @@ export default function BookService() {
                   </div>
                 </div>
                 {r.service.notes && <div className="small muted">{r.service.notes}</div>}
-                {search.located && r.center.lat != null && <RouteInfo centerId={id} from={loc} />}
+                <div className="row small">
+                  <Link className="btn sm" to={`/customer/centers/${id}`}>More details</Link>
+                  {r.center.lat != null && <button type="button" className="btn sm" onClick={() => showDirections(id)}>{focus === id ? 'Showing directions ↑' : 'Show directions'}</button>}
+                </div>
                 <CenterReviews centerId={id} ratingCount={r.ratingCount} />
                 <SlotPicker
                   availability={r.availability}

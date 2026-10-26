@@ -33,6 +33,20 @@ const holidaySchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Showroom / workshop photos customers see when they search (like a Google business listing).
+export const MAX_CENTER_PHOTOS = 10;
+const centerPhotoSchema = new mongoose.Schema({
+  url: { type: String, required: true },
+  publicId: { type: String, required: true },   // Cloudinary id, used to delete the image
+  caption: { type: String, trim: true, maxlength: 120 },
+  isCover: { type: Boolean, default: false }      // the main photo shown first on the center's card
+});
+
+// Photos as customers see them: cover first, without storage ids.
+export const publicPhotos = (c) => [...(c.photos || [])]
+  .sort((a, b) => Number(b.isCover) - Number(a.isCover))
+  .map((p) => ({ _id: p._id, url: p.url, caption: p.caption || '' }));
+
 const serviceCenterSchema = new mongoose.Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
@@ -78,8 +92,10 @@ const serviceCenterSchema = new mongoose.Schema(
     location: {
       lat: { type: Number, min: -90, max: 90 },
       lng: { type: Number, min: -180, max: 180 },
-      source: { type: String, enum: ['device', 'address', 'seed'] }   // how it was found
+      source: { type: String, enum: ['device', 'address', 'map', 'seed'] }   // how it was found
     },
+
+    photos: { type: [centerPhotoSchema], default: [] },
 
     // Phase 7: where customers pay online (demo UPI; the center confirms each payment by hand)
     paymentSettings: {

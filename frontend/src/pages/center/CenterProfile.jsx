@@ -5,6 +5,7 @@ import MapView from '../../components/MapView.jsx';
 import useCenterProfile from '../../hooks/useCenterProfile.js';
 import useVehicleOptions from '../../hooks/useVehicleOptions.js';
 import { errorMessage } from '../../api/client.js';
+import { mapsEnabled } from '../../hooks/useGoogleMaps.js';
 
 const FIELDS = ['name', 'description', 'address', 'city', 'pincode', 'phone', 'gstin'];
 
@@ -17,6 +18,11 @@ export default function CenterProfile() {
   const [brandMsg, setBrandMsg] = useState(null);
   const [locMsg, setLocMsg] = useState(null);
   const [locBusy, setLocBusy] = useState('');
+  const [choosingLocation, setChoosingLocation] = useState(false);
+  const [pickedLocation, setPickedLocation] = useState(null);
+  const [photoCaption, setPhotoCaption] = useState('');
+  const [photoBusy, setPhotoBusy] = useState('');
+  const [photoMsg, setPhotoMsg] = useState(null);
 
   useEffect(() => {
     if (!center) return;
@@ -71,14 +77,47 @@ export default function CenterProfile() {
       { enableHighAccuracy: true, timeout: 15000 }
     );
   };
-  const fromAddress = async () => {
+  const beginMapSelection = () => {
+    setPickedLocation(hasPoint ? { lat: center.location.lat, lng: center.location.lng } : null);
+    setChoosingLocation(true);
     setLocMsg(null);
-    setLocBusy('address');
+  };
+  const saveMapSelection = async () => {
+    if (!pickedLocation) {
+      setLocMsg({ tone: 'bad', text: 'Click the map to place the pin at your workshop first.' });
+      return;
+    }
+    setLocMsg(null);
+    setLocBusy('map');
     try {
-      await save('post', '/center/location/from-address');
-      setLocMsg({ tone: 'good', text: 'Location found from your address. Check the pin is at your workshop.' });
+      await save('put', '/center/location', {
+        lat: Number(pickedLocation.lat.toFixed(6)),
+        lng: Number(pickedLocation.lng.toFixed(6)),
+        source: 'map'
+      });
+      setChoosingLocation(false);
+      setLocMsg({ tone: 'good', text: 'Map location saved. Check that the pin is at your workshop.' });
     } catch (err) { locFail(err); } finally { setLocBusy(''); }
   };
+  // Showroom photos customers see when they search
+  const photos = center?.photos || [];
+  const photoAction = async (busy, run, text) => {
+    setPhotoMsg(null);
+    setPhotoBusy(busy);
+    try { await run(); setPhotoMsg({ tone: 'good', text }); return true; } catch (err) { setPhotoMsg({ tone: 'bad', text: errorMessage(err) }); return false; } finally { setPhotoBusy(''); }
+  };
+  const uploadPhoto = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setPhotoMsg({ tone: 'bad', text: 'The photo must be smaller than 2 MB.' }); return; }
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('caption', photoCaption);
+    photoAction('upload', () => save('post', '/center/photos', fd), 'Photo added. Customers will see it on your listing.')
+      .then((ok) => ok && setPhotoCaption(''));
+  };
+
   const removeLocation = async () => {
     setLocMsg(null);
     try { await save('delete', '/center/location'); setLocMsg({ tone: 'good', text: 'Location removed.' }); } catch (err) { locFail(err); }
@@ -106,20 +145,88 @@ export default function CenterProfile() {
 
           <div className="card">
             <div className="row between">
+              <h3>Showroom photos</h3>
+              <span className="small muted">{photos.length} / 10</span>
+            </div>
+            <p className="small muted">
+              Customers see these on your listing when they search for a service center, like photos on Google.
+              Add your showroom front, service bays, waiting area and team. The cover photo is shown first. JPG, PNG or WebP, under 2 MB.
+            </p>
+            {photos.length > 0 ? (
+              <div className="photo-manage">
+                {photos.map((p) => (
+                  <figure key={p._id}>
+                    <div className="thumb">
+                      <a href={p.url} target="_blank" rel="noreferrer"><img src={p.url} alt={p.caption || 'Showroom photo'} loading="lazy" /></a>
+                      {p.isCover && <span className="chip good">Cover</span>}
+                    </div>
+                    <figcaption>
+                      {p.caption && <span>{p.caption}</span>}
+                      {!p.isCover && (
+                        <button type="button" className="btn sm" disabled={!!photoBusy}
+                          onClick={() => photoAction(`cover-${p._id}`, () => save('patch', `/center/photos/${p._id}/cover`), 'Cover photo changed.')}>
+                          Make cover
+                        </button>
+                      )}
+                      <button type="button" className="btn ghost sm" disabled={!!photoBusy}
+                        onClick={() => photoAction(`del-${p._id}`, () => save('delete', `/center/photos/${p._id}`), 'Photo removed.')}>
+                        {photoBusy === `del-${p._id}` ? 'Removing…' : 'Remove'}
+                      </button>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            ) : (
+              <div className="empty small">No photos yet. Listings with photos get more bookings.</div>
+            )}
+            {photos.length < 10 && (
+              <div className="row align-end">
+                <label className="field grow"><span>Caption (optional)</span>
+                  <input maxLength={120} value={photoCaption} onChange={(e) => setPhotoCaption(e.target.value)} placeholder="Showroom front, Kadri Road" />
+                </label>
+                <label className={`btn primary ${photoBusy ? 'disabled' : ''}`}>
+                  {photoBusy === 'upload' ? 'Uploading…' : 'Upload photo'}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={!!photoBusy} onChange={uploadPhoto} />
+                </label>
+              </div>
+            )}
+            <Notice msg={photoMsg} />
+          </div>
+
+          <div className="card">
+            <div className="row between">
               <h3>Location on the map</h3>
               {hasPoint ? <span className="chip good">Set</span> : <span className="chip warn">Not set</span>}
             </div>
             <p className="small muted">
               {hasPoint
-                ? <>Customers see how far you are from them and find you on the map. Position: {center.location.lat.toFixed(5)}, {center.location.lng.toFixed(5)} ({center.location.source === 'address' ? 'found from your address' : center.location.source === 'seed' ? 'demo data' : 'from this device'}). <a href={`https://www.google.com/maps?q=${center.location.lat},${center.location.lng}`} target="_blank" rel="noreferrer">Check it on Google Maps</a>.</>
-                : 'Without a location, customers cannot see your distance or find you on the map. Stand at your workshop and use your current location, or find it from your address.'}
+                ? <>Customers see how far you are from them and find you on the map. Position: {center.location.lat.toFixed(5)}, {center.location.lng.toFixed(5)} ({center.location.source === 'address' ? 'found from your address' : center.location.source === 'seed' ? 'demo data' : center.location.source === 'map' ? 'chosen on the map' : 'from this device'}). <a href={`https://www.google.com/maps?q=${center.location.lat},${center.location.lng}`} target="_blank" rel="noreferrer">Check it on Google Maps</a>.</>
+                : 'Without a location, customers cannot see your distance or find you on the map. Stand at your workshop and use your current location, or choose it on the map.'}
             </p>
-            {hasPoint && <MapView markers={[{ id: 'me', lat: center.location.lat, lng: center.location.lng, title: center.name, tone: 'center' }]} height={220} />}
+            {hasPoint && !choosingLocation && <MapView markers={[{ id: 'me', lat: center.location.lat, lng: center.location.lng, title: center.name, tone: 'center' }]} height={220} />}
             <div className="row">
               <button className="btn primary" onClick={useDevice} disabled={locBusy}>{locBusy === 'device' ? 'Finding you…' : 'Use my current location'}</button>
-              <button className="btn" onClick={fromAddress} disabled={locBusy}>{locBusy === 'address' ? 'Looking up…' : 'Find from my address'}</button>
+              <button className="btn" onClick={beginMapSelection} disabled={locBusy || choosingLocation || !mapsEnabled}>Choose location on map</button>
               {hasPoint && <button className="btn ghost" onClick={removeLocation} disabled={locBusy}>Remove</button>}
             </div>
+            {!mapsEnabled && <p className="small muted">Choosing a pin needs VITE_GOOGLE_MAPS_KEY in frontend/.env (restart the dev server after adding it).</p>}
+            {choosingLocation && (
+              <>
+                <p className="small muted">
+                  Zoom in and click the map to place the pin at your workshop. Click again to move it.
+                  {pickedLocation && <> Selected: {pickedLocation.lat.toFixed(5)}, {pickedLocation.lng.toFixed(5)}</>}
+                </p>
+                <MapView
+                  markers={pickedLocation ? [{ id: 'picked', ...pickedLocation, title: 'Selected workshop location', tone: 'picked' }] : []}
+                  onMapClick={setPickedLocation}
+                  height={360}
+                />
+                <div className="row">
+                  <button className="btn primary" onClick={saveMapSelection} disabled={locBusy}>{locBusy === 'map' ? 'Saving location…' : 'Save selected location'}</button>
+                  <button className="btn" onClick={() => setChoosingLocation(false)} disabled={locBusy}>Cancel</button>
+                </div>
+              </>
+            )}
             <Notice msg={locMsg} />
           </div>
 

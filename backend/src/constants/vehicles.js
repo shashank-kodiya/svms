@@ -3,8 +3,16 @@
 export const VEHICLE_TYPES = ['Car', 'Bike'];
 
 export const BRANDS = {
-  Car: ['Hyundai', 'Maruti Suzuki', 'Tata', 'Mahindra', 'Honda', 'Toyota', 'Kia', 'MG', 'Skoda', 'Volkswagen', 'Renault', 'Nissan'],
-  Bike: ['Hero', 'Honda', 'Bajaj', 'TVS', 'Royal Enfield', 'Yamaha', 'Suzuki', 'KTM', 'Ather', 'Ola Electric']
+  Car: [
+    'Hyundai', 'Maruti Suzuki', 'Tata', 'Mahindra', 'Honda', 'Toyota', 'Kia', 'MG', 'Skoda', 'Volkswagen',
+    'Renault', 'Nissan', 'Citroen', 'Jeep', 'BYD', 'Force Motors', 'Isuzu', 'Mercedes-Benz', 'BMW', 'Audi',
+    'Volvo', 'Lexus', 'Porsche', 'Jaguar', 'Land Rover'
+  ],
+  Bike: [
+    'Hero', 'Honda', 'Bajaj', 'TVS', 'Royal Enfield', 'Yamaha', 'Suzuki', 'KTM', 'Ather', 'Ola Electric',
+    'Triumph', 'Harley-Davidson', 'Ducati', 'Aprilia', 'Kawasaki', 'Jawa', 'Yezdi', 'Husqvarna', 'BMW Motorrad',
+    'Hero Electric', 'Revolt', 'Ultraviolette', 'Simple Energy', 'Ampere', 'Okinawa', 'BGauss'
+  ]
 };
 
 export const FUEL_TYPES = ['Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid'];

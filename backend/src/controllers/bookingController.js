@@ -1,6 +1,6 @@
 import Booking, { ACTIVE_STATUSES } from '../models/Booking.js';
 import Vehicle from '../models/Vehicle.js';
-import ServiceCenter from '../models/ServiceCenter.js';
+import ServiceCenter, { publicPhotos } from '../models/ServiceCenter.js';
 import AppError, { asyncHandler } from '../utils/AppError.js';
 import { serviceByKey } from '../constants/services.js';
 import { isValidDateStr, toMinutes } from '../utils/slots.js';
@@ -11,7 +11,7 @@ import VehicleHealth from '../models/VehicleHealth.js';
 import { haversineKm, hasLocation } from '../services/geo.js';
 import { scoreAll } from '../services/recommend.js';
 
-const CENTER_PUBLIC = 'name address city pincode phone description brands services slotSettings workingHours holidays verificationStatus location ratingAvg ratingCount';
+const CENTER_PUBLIC = 'name address city pincode phone description brands services slotSettings workingHours holidays verificationStatus location ratingAvg ratingCount photos';
 
 // How many jobs each center has finished on the platform (one query for all the centers in a search).
 async function completedJobs(centerIds) {
@@ -61,7 +61,7 @@ export const searchCenters = asyncHandler(async (req, res) => {
     const located = hasLocation(c);
     results.push({
       center: {
-        _id: c._id, name: c.name, address: c.address, city: c.city, pincode: c.pincode, phone: c.phone, description: c.description,
+        _id: c._id, name: c.name, address: c.address, city: c.city, pincode: c.pincode, phone: c.phone, description: c.description, photos: publicPhotos(c),
         ...(located ? { lat: c.location.lat, lng: c.location.lng } : {})
       },
       service: { key: svc.key, name: def.name, price: svc.price, durationMins: svc.durationMins, notes: svc.notes },

@@ -9,6 +9,9 @@
     "start": "node src/server.js",
     "seed": "node scripts/seed.js",
     "seed:admin": "node scripts/seed.js --admin-only",
+    "seed:mangaluru": "node scripts/seed-mangaluru.js",
+    "seed:showrooms": "node scripts/seed-showrooms.js",
+    "seed:kia": "node scripts/seed-showrooms.js",
     "reminders": "node scripts/reminders.js",
     "test": "node --test"
   },

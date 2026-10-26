@@ -8,6 +8,7 @@ import VehicleForm from './pages/customer/VehicleForm.jsx';
 import VehicleDetail from './pages/customer/VehicleDetail.jsx';
 import BookService from './pages/customer/BookService.jsx';
 import FindCenters from './pages/customer/FindCenters.jsx';
+import CenterDetails from './pages/customer/CenterDetails.jsx';
 import MyBookings from './pages/customer/MyBookings.jsx';
 import BookingDetail from './pages/customer/BookingDetail.jsx';
 import CenterJobs from './pages/center/CenterJobs.jsx';
@@ -44,6 +45,7 @@ function CustomerArea() {
       <Route path="vehicles/:id" element={<VehicleDetail />} />
       <Route path="vehicles/:id/edit" element={<VehicleForm />} />
       <Route path="nearby" element={<FindCenters />} />
+      <Route path="centers/:id" element={<CenterDetails />} />
       <Route path="book" element={<BookService />} />
       <Route path="bookings" element={<MyBookings />} />
       <Route path="bookings/:id" element={<BookingDetail />} />

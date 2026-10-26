@@ -12,23 +12,30 @@ if (typeof window !== 'undefined') {
   window.gm_authFailure = () => authListeners.forEach((fn) => fn());
 }
 
+// Advanced markers need a Map ID. DEMO_MAP_ID works for development; for a live site create one in
+// Google Cloud (Maps Management) and put it in VITE_GOOGLE_MAP_ID.
+export const MAP_ID = import.meta.env.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID';
+
+// Google's recommended async loading: the script only sets up google.maps.importLibrary, then we load
+// the parts the app uses (map, advanced markers, directions).
 function load() {
-  if (window.google?.maps) return Promise.resolve();
   if (!loader) {
     loader = new Promise((resolve, reject) => {
+      if (window.google?.maps?.importLibrary) { resolve(); return; }
       window.__svmsMapsReady = resolve;
       const s = document.createElement('script');
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(KEY)}&callback=__svmsMapsReady&v=weekly`;
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(KEY)}&loading=async&callback=__svmsMapsReady&v=weekly`;
       s.async = true;
       s.onerror = () => { loader = null; reject(new Error('Could not load Google Maps. Check your internet connection.')); };
       document.head.appendChild(s);
-    });
+    }).then(() => Promise.all(['core', 'maps', 'marker', 'routes'].map((lib) => window.google.maps.importLibrary(lib))))
+      .catch((err) => { loader = null; throw err; });
   }
   return loader;
 }
 
 export default function useGoogleMaps() {
-  const [state, setState] = useState({ ready: !!window.google?.maps, error: '' });
+  const [state, setState] = useState({ ready: !!window.google?.maps?.marker?.AdvancedMarkerElement, error: '' });
 
   useEffect(() => {
     if (!mapsEnabled) return undefined;
