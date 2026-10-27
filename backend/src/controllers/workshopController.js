@@ -29,7 +29,7 @@ async function centerBooking(req) {
 
 const populate = (q) =>
   q.populate('customer', 'name phone email')
-    .populate('vehicle', 'brand model regNumber type fuel year km')
+    .populate('vehicle', 'brand model regNumber type fuel year km image')
     .populate('mechanic', 'name phone skills');
 
 // Full job card: booking, this visit's health check, the vehicle's earlier health checks
@@ -40,7 +40,8 @@ export async function jobCard(bookingId) {
   const previous = await VehicleHealth.find({ vehicle: b.vehicle._id, booking: { $ne: b._id } })
     .sort({ date: -1 }).limit(5).populate('center', 'name').lean();
   const billPreview = !b.bill && ['in_progress', ...BILLING_STATUSES].includes(b.status) ? computeBill(b) : null;
-  return { booking: b, health, previous, billPreview };
+  const center = await ServiceCenter.findById(b.center).select('paymentSettings.payBeforePickup').lean();
+  return { booking: b, health, previous, billPreview, payBeforePickup: !!center?.paymentSettings?.payBeforePickup };
 }
 
 // GET /api/center/jobs   vehicles that are due today or already in the workshop

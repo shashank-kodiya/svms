@@ -5,6 +5,7 @@ import MapView from '../../components/MapView.jsx';
 import CenterGallery from '../../components/CenterGallery.jsx';
 import Lightbox from '../../components/Lightbox.jsx';
 import DirectionsBar, { useCenterRoute } from '../../components/DirectionsBar.jsx';
+import PaymentMethods from '../../components/PaymentMethods.jsx';
 import { Stars } from '../../components/Stars.jsx';
 import useMyLocation from '../../hooks/useMyLocation.js';
 import api, { errorMessage } from '../../api/client.js';
@@ -38,6 +39,7 @@ function Icon({ name }) {
     car: 'M18.9 6c-.2-.6-.8-1-1.4-1h-11c-.7 0-1.2.4-1.4 1L3 12v8c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h12v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-8l-2.1-6ZM6.5 16a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3ZM5 11l1.5-4.5h11L19 11H5Z',
     directions: 'M21.7 11.3 12.7 2.3a1 1 0 0 0-1.4 0l-9 9a1 1 0 0 0 0 1.4l9 9a1 1 0 0 0 1.4 0l9-9a1 1 0 0 0 0-1.4ZM14 14.5V12h-4v3H8v-4c0-.6.4-1 1-1h5V7.5l3.5 3.5-3.5 3.5Z',
     calendar: 'M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 16H5V10h14v10Z',
+    wallet: 'M21 7h-1V5a2 2 0 0 0-2-2H5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1ZM5 5h13v2H5a1 1 0 0 1 0-2Zm15 14H5a1 1 0 0 1-1-1V8.8c.3.1.6.2 1 .2h15v3h-4a2 2 0 0 0 0 4h4v3Zm0-5v1h-4v-1h4Z',
     share: 'M18 16.1c-.8 0-1.4.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.2c.5.5 1.2.8 2 .8a3 3 0 1 0-3-3c0 .2 0 .5.1.7L8 9.8C7.5 9.3 6.8 9 6 9a3 3 0 1 0 0 6c.8 0 1.5-.3 2-.8l7.1 4.2-.1.6a2.9 2.9 0 1 0 3-2.9Z',
     google: 'M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3ZM12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Zm-5.6-8c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14ZM12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4 5.6-4Z'
   };
@@ -196,6 +198,9 @@ export default function CenterDetails() {
                     {['Car', 'Bike'].flatMap((t) => (c.brands?.[t] || []).map((b) => <span key={`${t}${b}`} className="chip">{b}{types.length > 1 ? ` · ${t}` : ''}</span>))}
                   </div>
                 </li>
+                {c.paymentMethods?.length > 0 && (
+                  <li><Icon name="wallet" /><div><PaymentMethods methods={c.paymentMethods} label="Payments:" />{c.payBeforePickup && <div className="small muted">Bill to be paid before the vehicle is released.</div>}</div></li>
+                )}
               </ul>
               {servicesByType.length > 0 && (
                 <div className="place-preview">

@@ -1,7 +1,8 @@
 import Booking from '../models/Booking.js';
 import Payment from '../models/Payment.js';
-import ServiceCenter from '../models/ServiceCenter.js';
+import ServiceCenter, { PAYMENT_METHODS, acceptedMethods } from '../models/ServiceCenter.js';
 import AppError, { asyncHandler } from '../utils/AppError.js';
+import { cloudinaryReady, uploadImage, deleteImage } from '../config/cloudinary.js';
 import { upiLink, upiQr } from '../services/payments.js';
 import { emitBookingToCenter, emitBookingToCustomer } from '../realtime.js';
 
@@ -14,19 +15,53 @@ async function myCenter(req) {
 // ---------------- Center: payment settings ----------------
 
 // GET /api/center/payment-settings
+const settingsOut = (center) => {
+  const ps = center.paymentSettings?.toObject?.() || {};
+  return { acceptsUpi: false, ...ps, payBeforePickup: !!ps.payBeforePickup, methods: acceptedMethods(center), upiQr: ps.upiQr?.url ? { url: ps.upiQr.url } : null };
+};
+
 export const getPaymentSettings = asyncHandler(async (req, res) => {
-  const center = await myCenter(req);
-  res.json({ acceptsUpi: false, ...center.paymentSettings?.toObject?.() });
+  res.json(settingsOut(await myCenter(req)));
 });
 
-// PUT /api/center/payment-settings   body: { acceptsUpi, upiId, payeeName }
+// PUT /api/center/payment-settings   body: { acceptsUpi, upiId, payeeName, methods }
 export const updatePaymentSettings = asyncHandler(async (req, res) => {
   const center = await myCenter(req);
   const { acceptsUpi, upiId, payeeName } = req.body;
   if (acceptsUpi && !upiId) throw new AppError('Enter your UPI ID to accept UPI payments.', 422);
-  center.paymentSettings = { acceptsUpi: !!acceptsUpi, upiId: upiId || undefined, payeeName: payeeName || undefined };
+  let methods = req.body.methods ? PAYMENT_METHODS.filter((m) => req.body.methods.includes(m)) : acceptedMethods(center);
+  if (acceptsUpi && !methods.includes('upi')) methods = PAYMENT_METHODS.filter((m) => m === 'upi' || methods.includes(m));
+  if (!methods.length) throw new AppError('Choose at least one way customers can pay.', 422);
+  // Keep the uploaded QR (a plain copy: the stored object is replaced just below).
+  const { url, publicId } = center.paymentSettings?.upiQr || {};
+  const upiQr = url ? { url, publicId } : undefined;
+  const payBeforePickup = req.body.payBeforePickup ?? !!center.paymentSettings?.payBeforePickup;
+  center.paymentSettings = { acceptsUpi: !!acceptsUpi, upiId: upiId || undefined, payeeName: payeeName || undefined, methods, upiQr, payBeforePickup: !!payBeforePickup };
   await center.save();
-  res.json(center.paymentSettings);
+  res.json(settingsOut(center));
+});
+
+// POST /api/center/payment-settings/qr   multipart: image   The center's own GPay / PhonePe / Paytm QR.
+export const uploadUpiQr = asyncHandler(async (req, res) => {
+  const center = await myCenter(req);
+  if (!req.file) throw new AppError('Choose the QR image to upload.', 400);
+  if (!cloudinaryReady()) throw new AppError('Photo upload is not set up yet. Add the Cloudinary keys to backend/.env.', 503);
+  const old = center.paymentSettings?.upiQr?.publicId;
+  const result = await uploadImage(req.file.buffer, `svms/centers/${center._id}/upi-qr`);
+  center.set('paymentSettings.upiQr', { url: result.secure_url, publicId: result.public_id });
+  await center.save();
+  await deleteImage(old);
+  res.status(201).json(settingsOut(center));
+});
+
+// DELETE /api/center/payment-settings/qr
+export const removeUpiQr = asyncHandler(async (req, res) => {
+  const center = await myCenter(req);
+  const old = center.paymentSettings?.upiQr?.publicId;
+  center.set('paymentSettings.upiQr', undefined);
+  await center.save();
+  await deleteImage(old);
+  res.json(settingsOut(center));
 });
 
 // ---------------- Center: confirm or reject online payments ----------------
@@ -96,9 +131,10 @@ export const payInfo = asyncHandler(async (req, res) => {
   const b = await payableBooking(req);
   const center = await ServiceCenter.findById(b.center).select('name paymentSettings');
   const ps = center.paymentSettings;
+  const methods = acceptedMethods(center);
   const latest = await Payment.findOne({ booking: b._id }).sort({ createdAt: -1 }).select('status reference rejectReason createdAt');
   if (!ps?.acceptsUpi || !ps.upiId) {
-    return res.json({ available: false, amount: b.bill.total, invoiceNo: b.bill.invoiceNo, latest, message: `${center.name} takes payment at the counter.` });
+    return res.json({ available: false, amount: b.bill.total, invoiceNo: b.bill.invoiceNo, latest, methods, message: `${center.name} takes payment at the counter.` });
   }
   const link = upiLink(center, b.bill);
   res.json({
@@ -109,6 +145,8 @@ export const payInfo = asyncHandler(async (req, res) => {
     payeeName: ps.payeeName || center.name,
     link,
     qr: await upiQr(link),
+    centerQr: ps.upiQr?.url || null,   // the center's own GPay / PhonePe / Paytm QR, if it uploaded one
+    methods,
     latest
   });
 });

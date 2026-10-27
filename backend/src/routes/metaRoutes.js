@@ -4,6 +4,7 @@ import { SERVICE_CATALOG, DAYS } from '../constants/services.js';
 import { param } from 'express-validator';
 import { validate } from '../middleware/validate.js';
 import { verifyInvoice } from '../controllers/billingController.js';
+import { publicServiceHistory } from '../controllers/vehicleController.js';
 
 // Public lists the forms need. No login required.
 const router = Router();
@@ -18,5 +19,8 @@ router.get('/service-catalog', (req, res) => {
 
 // Phase 6: anyone scanning the QR on an invoice can check it is genuine.
 router.get('/verify-invoice/:id', [param('id').isMongoId().withMessage('Invalid invoice link.')], validate, verifyInvoice);
+
+// A vehicle's service history, opened from the QR on the owner's report. The token is a random 32-character id.
+router.get('/vehicle-history/:token', [param('token').isHexadecimal().isLength({ min: 32, max: 32 }).withMessage('Invalid report link.')], validate, publicServiceHistory);
 
 export default router;

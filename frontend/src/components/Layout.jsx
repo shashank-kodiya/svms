@@ -14,7 +14,8 @@ const NAV = {
     { to: '/customer/vehicles', label: 'My Vehicles' },
     { to: '/customer/nearby', label: 'Find Centers' },
     { to: '/customer/book', label: 'Book Service' },
-    { to: '/customer/bookings', label: 'My Bookings' }
+    { to: '/customer/bookings', label: 'My Bookings' },
+    { to: '/customer/towing', label: 'Roadside Help' }
   ],
   service_center: [
     { to: '/center', label: 'Dashboard', end: true },
@@ -22,6 +23,7 @@ const NAV = {
     { to: '/center/jobs', label: 'Workshop' },
     { to: '/center/parts', label: 'Spare Parts' },
     { to: '/center/payments', label: 'Payments' },
+    { to: '/center/towing', label: 'Towing' },
     { to: '/center/revenue', label: 'Revenue' },
     { to: '/center/feedback', label: 'Reviews' },
     { to: '/center/profile', label: 'Profile & Brands' },

@@ -1,5 +1,6 @@
 import Booking from '../models/Booking.js';
 import ServiceCenter from '../models/ServiceCenter.js';
+import Payment from '../models/Payment.js';
 import AppError, { asyncHandler } from '../utils/AppError.js';
 import { nowIST } from '../utils/time.js';
 
@@ -75,5 +76,53 @@ export const adminRevenue = asyncHandler(async (req, res) => {
     from, to, ...data,
     byCenter: r.byCenter.map((x) => ({ centerId: x._id, name: names[String(x._id)]?.name || 'Unknown', city: names[String(x._id)]?.city, total: x.total, count: x.count })),
     outstanding: await outstanding({})
+  });
+});
+
+// GET /api/center/payments/summary?date=YYYY-MM-DD   (default: today, India time)
+// End-of-day settlement: money collected on one day by method, each payment, and what is still pending.
+export const centerDailyPayments = asyncHandler(async (req, res) => {
+  const center = await ServiceCenter.findOne({ owner: req.user._id }).select('_id');
+  if (!center) throw new AppError('Service center profile not found.', 404);
+  const date = req.query.date || nowIST().date;
+  const start = new Date(`${date}T00:00:00+05:30`);
+  const end = new Date(start.getTime() + 86400000);
+  const prevStart = new Date(start.getTime() - 86400000);
+  const own = { center: center._id, ...PAID };
+
+  const [paid, yesterday, waiting] = await Promise.all([
+    Booking.find({ ...own, 'bill.payment.paidAt': { $gte: start, $lt: end } })
+      .select('bookingNo vehicleSnapshot.regNumber service.name bill.invoiceNo bill.total bill.payment customer')
+      .populate('customer', 'name').sort({ 'bill.payment.paidAt': 1 }).lean(),
+    Booking.aggregate([{ $match: { ...own, 'bill.payment.paidAt': { $gte: prevStart, $lt: start } } }, { $group: { _id: null, total: { $sum: '$bill.total' } } }]),
+    Payment.aggregate([{ $match: { center: center._id, status: 'submitted' } }, { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }])
+  ]);
+
+  const byMethod = { cash: { total: 0, count: 0 }, upi_counter: { total: 0, count: 0 }, upi_online: { total: 0, count: 0 }, card: { total: 0, count: 0 } };
+  for (const b of paid) {
+    const m = byMethod[b.bill.payment.method] || (byMethod[b.bill.payment.method] = { total: 0, count: 0 });
+    m.total += b.bill.total;
+    m.count += 1;
+  }
+  res.json({
+    date,
+    total: paid.reduce((s, b) => s + b.bill.total, 0),
+    count: paid.length,
+    yesterdayTotal: yesterday[0]?.total || 0,
+    byMethod,
+    payments: paid.map((b) => ({
+      at: b.bill.payment.paidAt,
+      bookingId: b._id,
+      bookingNo: b.bookingNo,
+      invoiceNo: b.bill.invoiceNo,
+      customer: (b.customer?.name || '').split(' ')[0],
+      regNumber: b.vehicleSnapshot?.regNumber,
+      service: b.service?.name,
+      method: b.bill.payment.method,
+      reference: b.bill.payment.reference || '',
+      amount: b.bill.total
+    })),
+    awaitingConfirmation: { total: waiting[0]?.total || 0, count: waiting[0]?.count || 0 },
+    unpaid: await outstanding({ center: center._id })
   });
 });

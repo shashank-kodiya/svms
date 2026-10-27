@@ -7,10 +7,10 @@ import * as cb from '../controllers/centerBookingController.js';
 import * as w from '../controllers/workshopController.js';
 import * as bl from '../controllers/billingController.js';
 import * as pay from '../controllers/paymentController.js';
-import { centerRevenue } from '../controllers/revenueController.js';
+import { centerRevenue, centerDailyPayments } from '../controllers/revenueController.js';
 import * as maps from '../controllers/mapsController.js';
 import * as fb from '../controllers/feedbackController.js';
-import { UPI_ID } from '../models/ServiceCenter.js';
+import { UPI_ID, PAYMENT_METHODS } from '../models/ServiceCenter.js';
 import { GST_RATES } from '../models/SparePart.js';
 import { handleUpload } from '../middleware/upload.js';
 import { HEALTH_PARTS, HEALTH_VALUES } from '../models/VehicleHealth.js';
@@ -204,6 +204,12 @@ router.delete('/bookings/:id/parts/:lineId', [idp, param('lineId').isMongoId()],
 router.post('/bookings/:id/bill', [idp], validate, bl.finalizeBill);
 router.get('/bookings/:id/invoice.pdf', [idp], validate, bl.centerInvoicePdf);
 router.post(
+  '/bookings/:id/payment',
+  [idp, body('paymentMethod').isIn(['cash', 'card', 'upi_counter']).withMessage('Choose how the customer paid.')],
+  validate,
+  bl.recordCounterPayment
+);
+router.post(
   '/bookings/:id/handover',
   [
     idp,
@@ -250,11 +256,18 @@ router.put(
   [
     body('acceptsUpi').isBoolean().withMessage('Choose whether you accept UPI.').toBoolean(),
     body('upiId').optional({ values: 'falsy' }).trim().toLowerCase().matches(UPI_ID).withMessage('Enter a valid UPI ID, for example yourshop@okaxis.'),
-    body('payeeName').optional({ values: 'falsy' }).trim().isLength({ min: 2, max: 60 }).withMessage('Payee name must be 2 to 60 characters.')
+    body('payeeName').optional({ values: 'falsy' }).trim().isLength({ min: 2, max: 60 }).withMessage('Payee name must be 2 to 60 characters.'),
+    body('payBeforePickup').optional().isBoolean().withMessage('Choose whether the bill must be paid before pickup.').toBoolean(),
+    body('methods').optional().isArray({ min: 1 }).withMessage('Choose at least one way customers can pay.'),
+    body('methods.*').isIn(PAYMENT_METHODS).withMessage('Unknown payment method.')
   ],
   validate,
   pay.updatePaymentSettings
 );
+router.post('/payment-settings/qr', handleUpload, pay.uploadUpiQr);
+router.delete('/payment-settings/qr', pay.removeUpiQr);
+// End-of-day settlement: what was collected on one day, by payment method
+router.get('/payments/summary', [query('date').optional().matches(/^\d{4}-\d{2}-\d{2}$/).withMessage('Choose a valid date.')], validate, centerDailyPayments);
 router.get('/payments', [query('status').optional().isIn(['submitted', 'confirmed', 'rejected'])], validate, pay.listPayments);
 router.patch('/payments/:id/confirm', [param('id').isMongoId()], validate, pay.confirmPayment);
 router.patch(

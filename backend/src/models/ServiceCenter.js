@@ -33,6 +33,24 @@ const holidaySchema = new mongoose.Schema(
   { _id: false }
 );
 
+// A tow truck the center sends to customers who break down on the way.
+export const TOW_VEHICLE_TYPES = ['flatbed', 'wheel_lift', 'bike_carrier'];
+const towContactSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true, maxlength: 60 },     // driver or desk, e.g. "Ravi (driver)"
+  phone: { type: String, required: true, trim: true, maxlength: 15 },
+  vehicleType: { type: String, enum: TOW_VEHICLE_TYPES, default: 'flatbed' }
+});
+
+// Ways a customer can pay a center.
+export const PAYMENT_METHODS = ['cash', 'upi', 'card', 'netbanking', 'emi'];
+
+// The methods a center accepts. Centers that never chose take cash, plus UPI if online UPI is on.
+export const acceptedMethods = (c) => {
+  const ps = c?.paymentSettings || {};
+  if (ps.methods?.length) return PAYMENT_METHODS.filter((m) => ps.methods.includes(m));
+  return ps.acceptsUpi ? ['cash', 'upi'] : ['cash'];
+};
+
 // Showroom / workshop photos customers see when they search (like a Google business listing).
 export const MAX_CENTER_PHOTOS = 10;
 const centerPhotoSchema = new mongoose.Schema({
@@ -97,11 +115,27 @@ const serviceCenterSchema = new mongoose.Schema(
 
     photos: { type: [centerPhotoSchema], default: [] },
 
+    // Roadside help: customers stuck on the way can find this center's tow trucks and request a tow.
+    towing: {
+      enabled: { type: Boolean, default: false },
+      radiusKm: { type: Number, default: 25, min: 1, max: 200 },     // how far the trucks go
+      available24x7: { type: Boolean, default: false },              // otherwise: during working hours
+      charges: { type: String, trim: true, maxlength: 200 },         // e.g. "₹1,500 up to 10 km, then ₹40/km"
+      contacts: { type: [towContactSchema], default: [] }
+    },
+
     // Phase 7: where customers pay online (demo UPI; the center confirms each payment by hand)
     paymentSettings: {
       acceptsUpi: { type: Boolean, default: false },
       upiId: { type: String, trim: true, lowercase: true, match: UPI_ID },
-      payeeName: { type: String, trim: true, maxlength: 60 }
+      payeeName: { type: String, trim: true, maxlength: 60 },
+      // How customers can pay at this center (shown on bookings and bills).
+      methods: { type: [{ type: String, enum: PAYMENT_METHODS }], default: undefined },
+      // The center's own GPay / PhonePe / Paytm QR image, shown when the customer pays.
+      upiQr: { url: String, publicId: String },
+      // On: the bill must be paid (online, or recorded at the counter) before the vehicle is handed over,
+      // and the customer's pickup code stays hidden until then. Off: payment is taken at handover.
+      payBeforePickup: { type: Boolean, default: false }
     }
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }

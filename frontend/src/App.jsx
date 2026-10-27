@@ -9,6 +9,8 @@ import VehicleDetail from './pages/customer/VehicleDetail.jsx';
 import BookService from './pages/customer/BookService.jsx';
 import FindCenters from './pages/customer/FindCenters.jsx';
 import CenterDetails from './pages/customer/CenterDetails.jsx';
+import CustomerTowing from './pages/customer/CustomerTowing.jsx';
+import CenterTowing from './pages/center/CenterTowing.jsx';
 import MyBookings from './pages/customer/MyBookings.jsx';
 import BookingDetail from './pages/customer/BookingDetail.jsx';
 import CenterJobs from './pages/center/CenterJobs.jsx';
@@ -26,6 +28,7 @@ import CenterRevenue from './pages/center/CenterRevenue.jsx';
 import CenterFeedback from './pages/center/CenterFeedback.jsx';
 import AdminComplaints from './pages/admin/AdminComplaints.jsx';
 import VerifyInvoice from './pages/VerifyInvoice.jsx';
+import VerifyHistory from './pages/VerifyHistory.jsx';
 import Notifications from './pages/Notifications.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import { useAuth, homeFor } from './context/AuthContext.jsx';
@@ -46,6 +49,7 @@ function CustomerArea() {
       <Route path="vehicles/:id/edit" element={<VehicleForm />} />
       <Route path="nearby" element={<FindCenters />} />
       <Route path="centers/:id" element={<CenterDetails />} />
+      <Route path="towing" element={<CustomerTowing />} />
       <Route path="book" element={<BookService />} />
       <Route path="bookings" element={<MyBookings />} />
       <Route path="bookings/:id" element={<BookingDetail />} />
@@ -67,6 +71,7 @@ function CenterArea() {
       <Route path="mechanics" element={<CenterMechanics />} />
       <Route path="parts" element={<CenterParts />} />
       <Route path="payments" element={<CenterPayments />} />
+      <Route path="towing" element={<CenterTowing />} />
       <Route path="revenue" element={<CenterRevenue />} />
       <Route path="feedback" element={<CenterFeedback />} />
       <Route path="*" element={<Navigate to="/center" replace />} />
@@ -92,6 +97,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify/:id" element={<VerifyInvoice />} />
+      <Route path="/history/:token" element={<VerifyHistory />} />
       <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
       <Route path="/customer/*" element={<ProtectedRoute roles={['customer']}><CustomerArea /></ProtectedRoute>} />
       <Route path="/center/*" element={<ProtectedRoute roles={['service_center']}><CenterArea /></ProtectedRoute>} />

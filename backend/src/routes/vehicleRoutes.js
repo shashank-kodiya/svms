@@ -6,7 +6,8 @@ import { handleUpload } from '../middleware/upload.js';
 import { BRANDS, VEHICLE_TYPES, FUEL_TYPES, normaliseReg, isValidReg } from '../constants/vehicles.js';
 import {
   listVehicles, getVehicle, createVehicle, updateVehicle, addOdometer,
-  setDocuments, uploadVehicleImage, removeVehicleImage, archiveVehicle, vehicleHealth, suggestions
+  setDocuments, uploadVehicleImage, removeVehicleImage, archiveVehicle, vehicleHealth, suggestions,
+  serviceHistory, serviceHistoryPdf, stopHistoryShare
 } from '../controllers/vehicleController.js';
 
 const router = Router();
@@ -53,6 +54,11 @@ router.post(
 router.get('/suggestions', suggestions); // before '/:id' so "suggestions" is not read as an ID
 router.get('/:id', [idRule], validate, getVehicle);
 router.get('/:id/health', [idRule], validate, vehicleHealth);
+
+// Service history report for selling the vehicle (PDF with a QR the buyer can scan)
+router.get('/:id/history', [idRule], validate, serviceHistory);
+router.get('/:id/history.pdf', [idRule], validate, serviceHistoryPdf);
+router.delete('/:id/history-share', [idRule], validate, stopHistoryShare);
 router.patch('/:id', [idRule, ...detailRules(true)], validate, updateVehicle);
 router.delete('/:id', [idRule], validate, archiveVehicle);
 

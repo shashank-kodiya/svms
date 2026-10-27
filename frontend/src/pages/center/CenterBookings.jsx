@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout.jsx';
 import Plate from '../../components/Plate.jsx';
+import VehicleThumb, { vehiclePhoto } from '../../components/VehicleThumb.jsx';
 import api, { errorMessage } from '../../api/client.js';
 import { getSocket } from '../../api/socket.js';
 import { statusLabel, statusTone, inr, localDate, niceDate, niceTime } from '../../utils/booking.js';
@@ -27,8 +28,9 @@ function RequestRow({ b, onDone }) {
 
   return (
     <div className="item">
-      <div className="row between">
-        <div>
+      <div className="row between request-row">
+        <VehicleThumb booking={b} size={84} />
+        <div className="grow">
           <b>{niceDate(b.date)} · {niceTime(b.slot)}</b> <span className="muted small mono">{b.bookingNo}</span>
           <div className="small">{b.service.name} · from {inr(b.service.price)}</div>
           <div className="small muted">{b.customer?.name} · {b.customer?.phone || b.customer?.email} · {b.vehicleSnapshot?.brand} {b.vehicleSnapshot?.model}</div>
@@ -116,6 +118,7 @@ export default function CenterBookings() {
                   <div className="row chips">
                     {inSlot.length === 0 ? <span className="small muted">Free</span> : inSlot.map((b) => (
                       <Link key={b._id} to={`/center/jobs/${b._id}`} className={`chip link-chip ${statusTone(b.status)}`} title={`${b.customer?.name} · ${b.service.name} · open job card`}>
+                        {vehiclePhoto(b) && <img className="chip-thumb" src={vehiclePhoto(b)} alt="" />}
                         {b.vehicleSnapshot?.regNumber} · {b.service.name} · {statusLabel(b.status)}
                       </Link>
                     ))}

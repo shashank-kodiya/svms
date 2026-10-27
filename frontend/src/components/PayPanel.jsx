@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import Notice from './Notice.jsx';
+import PaymentMethods from './PaymentMethods.jsx';
 import api, { errorMessage } from '../api/client.js';
 import { inr2 } from '../utils/booking.js';
 
@@ -47,14 +48,22 @@ export default function PayPanel({ bookingId, onChanged }) {
   return (
     <div className="card">
       <h3>Pay online (UPI)</h3>
+      <PaymentMethods methods={info.methods} label="This center accepts" />
       {!info.available ? (
         <p className="small muted">{info.message} Amount to pay: <b>{inr2(info.amount)}</b>.</p>
       ) : (
         <>
           <p className="small">Amount: <b>{inr2(info.amount)}</b> · Invoice <span className="mono">{info.invoiceNo}</span>. This is a demo: no money moves through this website.</p>
           <div className="pay-grid">
+            {info.centerQr && (
+              <div className="pay-qr">
+                <img src={info.centerQr} alt={`${info.payeeName} UPI QR code`} width={200} height={200} className="center-upi-qr" />
+                <span className="small muted">{info.payeeName}'s QR · enter <b>{inr2(info.amount)}</b> in your app</span>
+              </div>
+            )}
             <div className="pay-qr">
               <img src={info.qr} alt={`UPI QR code to pay ${inr2(info.amount)} to ${info.payeeName}`} width={200} height={200} />
+              {info.centerQr && <span className="small muted">Or scan this one: amount already filled in</span>}
               <a className="btn sm" href={info.link}>Open in UPI app</a>
             </div>
             <div className="list">

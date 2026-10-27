@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../../components/Layout.jsx';
 import Plate from '../../components/Plate.jsx';
+import VehicleThumb, { vehiclePhoto } from '../../components/VehicleThumb.jsx';
 import StatusSteps from '../../components/StatusSteps.jsx';
 import Notice from '../../components/Notice.jsx';
 import PhotoGrid from '../../components/PhotoGrid.jsx';
@@ -114,6 +115,14 @@ export default function JobCard() {
       actions={<div className="row"><Plate reg={b.vehicleSnapshot?.regNumber} /><span className={`chip ${statusTone(b.status)}`}>{statusLabel(b.status)}</span></div>}
     >
       <div className="card">
+        <div className="row job-vehicle">
+          <VehicleThumb booking={b} size={110} />
+          <div>
+            <b>{b.vehicleSnapshot?.brand} {b.vehicleSnapshot?.model}</b>
+            <div className="small muted">{[b.vehicle?.fuel, b.vehicle?.year, b.vehicleSnapshot?.km != null ? `${b.vehicleSnapshot.km.toLocaleString('en-IN')} km at booking` : null].filter(Boolean).join(' · ')}</div>
+            {!vehiclePhoto(b) && <div className="small muted">No photo from the customer. Check the number plate when the vehicle arrives.</div>}
+          </div>
+        </div>
         <StatusSteps status={b.status} />
         {b.problem && <div className="small">Customer says: “{b.problem}”</div>}
         <div className="row between align-end">
@@ -143,24 +152,54 @@ export default function JobCard() {
         {msgs.hand?.tone === 'good' && <Notice msg={msgs.hand} />}
       </div>
 
-      {b.status === 'ready_for_pickup' && (
-        <form className="card handover" onSubmit={(e) => { e.preventDefault(); run('hand', () => api.post(`/center/bookings/${id}/handover`, hand), 'Vehicle handed over. The job is complete.'); }} noValidate>
-          <h3>Hand over the vehicle</h3>
-          <p className="small">Ask the customer for the <b>4-digit pickup code</b> in their app. This proves the right person is collecting the vehicle. {b.bill?.payment?.status === 'paid' ? <>The customer has <b>already paid online</b>.</> : <>Take the payment of <b>{b.bill ? `₹${b.bill.total.toLocaleString('en-IN')}` : ''}</b> first.</>}</p>
-          <div className="row align-end">
-            <label className="field"><span>Pickup code</span><input className="otp-input" inputMode="numeric" autoComplete="off" maxLength={4} value={hand.otp} onChange={(e) => setHand({ ...hand, otp: e.target.value.replace(/\D/g, '') })} placeholder="••••" /></label>
-            {b.bill?.payment?.status !== 'paid' && (
-              <label className="field"><span>Paid by</span>
-                <select value={hand.paymentMethod} onChange={(e) => setHand({ ...hand, paymentMethod: e.target.value })}>
-                  {['cash', 'card', 'upi_counter'].map((m) => <option key={m} value={m}>{PAY_METHODS[m]}</option>)}
-                </select>
-              </label>
-            )}
-            <button className="btn primary">Check code & hand over</button>
+      {b.bill && b.bill.payment?.status !== 'paid' && ['quality_check', 'ready_for_pickup'].includes(b.status) && (job.payBeforePickup || b.status === 'quality_check') && (
+        <form className="card" onSubmit={(e) => { e.preventDefault(); run('pay', () => api.post(`/center/bookings/${id}/payment`, { paymentMethod: hand.paymentMethod }), 'Payment recorded. The customer can now see their pickup code.'); }} noValidate>
+          <div className="row between">
+            <h3>Record payment</h3>
+            {job.payBeforePickup && <span className="chip warn">Pay before pickup</span>}
           </div>
-          {msgs.hand?.tone === 'bad' && <Notice msg={msgs.hand} />}
+          <p className="small">
+            Bill <span className="mono">{b.bill.invoiceNo}</span>: <b>₹{b.bill.total.toLocaleString('en-IN')}</b>.{' '}
+            {job.payBeforePickup ? 'Your center releases vehicles only after payment. Record the counter payment here; the customer then sees their pickup code.' : 'Took the payment early? Record it here so handover only needs the pickup code.'}
+          </p>
+          <div className="row align-end">
+            <label className="field"><span>Paid by</span>
+              <select value={hand.paymentMethod} onChange={(e) => setHand({ ...hand, paymentMethod: e.target.value })}>
+                {['cash', 'card', 'upi_counter'].map((m) => <option key={m} value={m}>{PAY_METHODS[m]}</option>)}
+              </select>
+            </label>
+            <button className="btn primary">Mark ₹{b.bill.total.toLocaleString('en-IN')} as paid</button>
+          </div>
+          <Notice msg={msgs.pay} />
         </form>
       )}
+
+      {b.status === 'ready_for_pickup' && (() => {
+        const paid = b.bill?.payment?.status === 'paid';
+        const locked = job.payBeforePickup && !paid;
+        return (
+          <form className="card handover" onSubmit={(e) => { e.preventDefault(); run('hand', () => api.post(`/center/bookings/${id}/handover`, hand), 'Vehicle handed over. The job is complete.'); }} noValidate>
+            <h3>Hand over the vehicle</h3>
+            {locked ? (
+              <div className="alert warn">Waiting for payment. Your center releases vehicles only after the bill is paid: the customer pays online, or you record the counter payment above.</div>
+            ) : (
+              <p className="small">Ask the customer for the <b>4-digit pickup code</b> in their app. This proves the right person is collecting the vehicle. {paid ? <>The bill is <b>already paid</b>{b.bill.payment.method ? ` (${PAY_METHODS[b.bill.payment.method] || b.bill.payment.method})` : ''}.</> : <>Take the payment of <b>{b.bill ? `₹${b.bill.total.toLocaleString('en-IN')}` : ''}</b> first.</>}</p>
+            )}
+            <div className="row align-end">
+              <label className="field"><span>Pickup code</span><input className="otp-input" inputMode="numeric" autoComplete="off" maxLength={4} value={hand.otp} disabled={locked} onChange={(e) => setHand({ ...hand, otp: e.target.value.replace(/\D/g, '') })} placeholder="••••" /></label>
+              {!paid && !locked && (
+                <label className="field"><span>Paid by</span>
+                  <select value={hand.paymentMethod} onChange={(e) => setHand({ ...hand, paymentMethod: e.target.value })}>
+                    {['cash', 'card', 'upi_counter'].map((m) => <option key={m} value={m}>{PAY_METHODS[m]}</option>)}
+                  </select>
+                </label>
+              )}
+              <button className="btn primary" disabled={locked}>Check code & hand over</button>
+            </div>
+            {msgs.hand?.tone === 'bad' && <Notice msg={msgs.hand} />}
+          </form>
+        );
+      })()}
 
       <div className="grid2 top">
         <div className="card">

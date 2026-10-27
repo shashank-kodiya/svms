@@ -5,6 +5,8 @@ import { normaliseReg, BRANDS } from '../constants/vehicles.js';
 import { cloudinaryReady, uploadImage, deleteImage } from '../config/cloudinary.js';
 import { nowIST } from '../utils/time.js';
 import { buildSuggestions } from '../services/maintenance.js';
+import { buildHistory, newShareToken, historyUrl, maskReg } from '../services/serviceHistory.js';
+import { sendHistoryPdf } from '../services/historyPdf.js';
 
 const MAX_KM_JUMP = 100000;
 
@@ -147,4 +149,47 @@ export const suggestions = asyncHandler(async (req, res) => {
     if (items.length) out.push({ vehicleId: v._id, name: `${v.brand} ${v.model}`, regNumber: v.regNumber, items });
   }
   res.json(out);
+});
+
+// ---------- Service history report (for selling the vehicle) ----------
+
+// GET /api/vehicles/:id/history   What the report contains, and whether its share link is on.
+export const serviceHistory = asyncHandler(async (req, res) => {
+  const v = await ownVehicle(req);
+  const h = await buildHistory(v);
+  res.json({ ...h, shareUrl: v.historyShare?.token ? historyUrl(v.historyShare.token) : null });
+});
+
+// GET /api/vehicles/:id/history.pdf   The report as a PDF. Turns the share link on (its QR is printed on the PDF).
+export const serviceHistoryPdf = asyncHandler(async (req, res) => {
+  const v = await ownVehicle(req);
+  if (!v.historyShare?.token) {
+    v.historyShare = { token: newShareToken(), createdAt: new Date() };
+    await v.save();
+  }
+  await sendHistoryPdf(res, await buildHistory(v), historyUrl(v.historyShare.token));
+});
+
+// DELETE /api/vehicles/:id/history-share   Switches the link off: printed QR codes stop working.
+// The next PDF gets a new link.
+export const stopHistoryShare = asyncHandler(async (req, res) => {
+  const v = await ownVehicle(req);
+  v.historyShare = undefined;
+  await v.save();
+  res.json({ shareUrl: null, message: 'Sharing is off. Old QR codes and links no longer work.' });
+});
+
+// GET /api/meta/vehicle-history/:token   Public page opened from the QR on the report. No login.
+// Shows the live record without the owner's name or phone, and only part of the registration number.
+export const publicServiceHistory = asyncHandler(async (req, res) => {
+  const v = await Vehicle.findOne({ 'historyShare.token': req.params.token, isActive: true });
+  if (!v) return res.status(404).json({ valid: false, message: 'This report link is not valid. The owner may have switched sharing off.' });
+  const h = await buildHistory(v);
+  res.json({
+    valid: true,
+    ...h,
+    vehicle: { ...h.vehicle, regNumber: maskReg(h.vehicle.regNumber) },
+    services: h.services.map(({ invoiceNo, ...s }) => s),
+    lastService: h.lastService ? (({ invoiceNo, ...s }) => s)(h.lastService) : null
+  });
 });

@@ -1,4 +1,4 @@
-import ServiceCenter, { publicPhotos } from '../models/ServiceCenter.js';
+import ServiceCenter, { publicPhotos, acceptedMethods } from '../models/ServiceCenter.js';
 import AppError, { asyncHandler } from '../utils/AppError.js';
 import { haversineKm, hasLocation, estimateRoute } from '../services/geo.js';
 import { mapsReady, geocode, drivingRoute, nearbyGarages, googleListing } from '../services/maps.js';
@@ -51,7 +51,7 @@ const clock = (hhmm) => {
   const [h, m] = hhmm.split(':').map(Number);
   return `${h % 12 || 12}${m ? `:${String(m).padStart(2, '0')}` : ''} ${h < 12 ? 'AM' : 'PM'}`;
 };
-function openStatus(center) {
+export function openStatus(center) {
   const { date, minutes } = nowIST();
   const dayHours = (d) => (center.workingHours || []).find((h) => h.day === dayOfWeek(d));
   const holiday = (d) => (center.holidays || []).find((h) => h.date === d);
@@ -78,7 +78,7 @@ function openStatus(center) {
 // GET /api/maps/centers/:id   Everything for the center's details page (like a Google Maps listing).
 export const centerDetails = asyncHandler(async (req, res) => {
   const c = await ServiceCenter.findOne({ _id: req.params.id, verificationStatus: 'verified' })
-    .select('name description address city pincode phone brands services workingHours holidays location ratingAvg ratingCount photos createdAt').lean();
+    .select('name description address city pincode phone brands services workingHours holidays location ratingAvg ratingCount photos createdAt paymentSettings.methods paymentSettings.acceptsUpi paymentSettings.payBeforePickup').lean();
   if (!c) throw new AppError('Service center not found.', 404);
   const { date } = nowIST();
   const located = hasLocation(c);
@@ -97,6 +97,8 @@ export const centerDetails = asyncHandler(async (req, res) => {
     ...(located ? { lat: c.location.lat, lng: c.location.lng } : {}),
     ratingAvg: c.ratingAvg || 0, ratingCount: c.ratingCount || 0,
     photos: publicPhotos(c),
+    paymentMethods: acceptedMethods(c),
+    payBeforePickup: !!c.paymentSettings?.payBeforePickup,
     memberSince: c.createdAt,
     google,
     googleEnabled: mapsReady()

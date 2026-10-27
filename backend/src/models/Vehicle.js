@@ -39,6 +39,11 @@ const vehicleSchema = new mongoose.Schema(
       center: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceCenter' },
       booking: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }
     },
+    // Service history report: the link printed as a QR code on the PDF. The owner can switch it off.
+    historyShare: {
+      token: { type: String, index: { unique: true, sparse: true } },
+      createdAt: Date
+    },
     isActive: { type: Boolean, default: true }
   },
   { timestamps: true }

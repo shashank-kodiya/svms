@@ -13,7 +13,7 @@ async function myCenter(req) {
   return center;
 }
 
-const populate = (q) => q.populate('customer', 'name phone email').populate('vehicle', 'brand model regNumber type fuel year km');
+const populate = (q) => q.populate('customer', 'name phone email').populate('vehicle', 'brand model regNumber type fuel year km image');
 
 // GET /api/center/bookings?status=pending,accepted&date=YYYY-MM-DD&from=&to=
 export const listBookings = asyncHandler(async (req, res) => {

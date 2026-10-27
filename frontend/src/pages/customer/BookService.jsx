@@ -5,6 +5,7 @@ import Plate from '../../components/Plate.jsx';
 import SlotPicker from '../../components/SlotPicker.jsx';
 import MapView from '../../components/MapView.jsx';
 import DirectionsBar, { useCenterRoute } from '../../components/DirectionsBar.jsx';
+import PaymentMethods from '../../components/PaymentMethods.jsx';
 import CenterReviews from '../../components/CenterReviews.jsx';
 import { Stars } from '../../components/Stars.jsx';
 import useMyLocation from '../../hooks/useMyLocation.js';
@@ -219,6 +220,7 @@ export default function BookService() {
                     </div>
                     <div className="small muted">{r.center.address}, {r.center.city} {r.center.pincode} · {r.center.phone}</div>
                     {r.center.description && <div className="small">{r.center.description}</div>}
+                    <PaymentMethods methods={r.center.paymentMethods} />
                   </div>
                   <div className="price">
                     <b>{inr(r.service.price)}</b>
@@ -249,8 +251,20 @@ export default function BookService() {
               <b>{picked.center.name}</b> · {search.service.name}
               <div className="small">{niceDate(search.date)} at {niceTime(pick.slot)} · from {inr(picked.service.price)} (parts and GST extra)</div>
             </div>
-            {vehicle && <Plate reg={vehicle.regNumber} />}
+            {vehicle && (
+              <div className="row confirm-vehicle">
+                {vehicle.image?.url && <img className="confirm-vehicle__photo" src={vehicle.image.url} alt={`${vehicle.brand} ${vehicle.model}`} />}
+                <Plate reg={vehicle.regNumber} />
+              </div>
+            )}
           </div>
+          {vehicle && !vehicle.image?.url && (
+            <div className="alert info small">
+              Add a photo of your {vehicle.brand} {vehicle.model} so the center can recognise it when you arrive.{' '}
+              <Link to={`/customer/vehicles/${vehicle._id}`}>Add photo</Link> (your booking choices here are kept only until you leave this page).
+            </div>
+          )}
+          {vehicle?.image?.url && <p className="small muted">The center sees this photo with your booking request.</p>}
           <label className="field"><span>Anything the mechanic should know? (optional)</span>
             <textarea rows={2} maxLength={500} value={problem} onChange={(e) => setProblem(e.target.value)} placeholder="Squeaking noise when braking" />
           </label>

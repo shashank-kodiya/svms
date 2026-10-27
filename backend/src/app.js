@@ -10,6 +10,7 @@ import centerRoutes from './routes/centerRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import mapsRoutes from './routes/mapsRoutes.js';
+import towingRoutes from './routes/towingRoutes.js';
 import AppError, { asyncHandler } from './utils/AppError.js';
 import { codesMatch } from './services/billing.js';
 import { runReminders } from './services/reminders.js';
@@ -43,6 +44,7 @@ export function createApp() {
   app.use('/api/bookings', bookingRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/maps', mapsRoutes);
+  app.use('/api/towing', towingRoutes);
 
   // Phase 10: lets an outside timer (for example cron-job.org) run the daily reminders when the server
   // sleeps between visits (free hosting). Off unless CRON_SECRET is set; the secret is checked in constant time.

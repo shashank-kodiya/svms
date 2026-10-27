@@ -1,6 +1,6 @@
 import Booking, { ACTIVE_STATUSES } from '../models/Booking.js';
 import Vehicle from '../models/Vehicle.js';
-import ServiceCenter, { publicPhotos } from '../models/ServiceCenter.js';
+import ServiceCenter, { publicPhotos, acceptedMethods } from '../models/ServiceCenter.js';
 import AppError, { asyncHandler } from '../utils/AppError.js';
 import { serviceByKey } from '../constants/services.js';
 import { isValidDateStr, toMinutes } from '../utils/slots.js';
@@ -11,7 +11,7 @@ import VehicleHealth from '../models/VehicleHealth.js';
 import { haversineKm, hasLocation } from '../services/geo.js';
 import { scoreAll } from '../services/recommend.js';
 
-const CENTER_PUBLIC = 'name address city pincode phone description brands services slotSettings workingHours holidays verificationStatus location ratingAvg ratingCount photos';
+const CENTER_PUBLIC = 'name address city pincode phone description brands services slotSettings workingHours holidays verificationStatus location ratingAvg ratingCount photos paymentSettings.methods paymentSettings.acceptsUpi';
 
 // How many jobs each center has finished on the platform (one query for all the centers in a search).
 async function completedJobs(centerIds) {
@@ -36,7 +36,7 @@ function offeredService(center, vehicle, serviceKey) {
 const makeBookingNo = (date) =>
   `SB-${date.slice(2).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-const populateForCustomer = (q) => q.populate('center', 'name address city pincode phone').populate('vehicle', 'brand model regNumber type').populate('mechanic', 'name');
+const populateForCustomer = (q) => q.populate('center', 'name address city pincode phone paymentSettings.methods paymentSettings.acceptsUpi paymentSettings.payBeforePickup').populate('vehicle', 'brand model regNumber type').populate('mechanic', 'name');
 
 // GET /api/bookings/search?vehicleId=&serviceKey=&date=&city=
 export const searchCenters = asyncHandler(async (req, res) => {
@@ -61,7 +61,7 @@ export const searchCenters = asyncHandler(async (req, res) => {
     const located = hasLocation(c);
     results.push({
       center: {
-        _id: c._id, name: c.name, address: c.address, city: c.city, pincode: c.pincode, phone: c.phone, description: c.description, photos: publicPhotos(c),
+        _id: c._id, name: c.name, address: c.address, city: c.city, pincode: c.pincode, phone: c.phone, description: c.description, photos: publicPhotos(c), paymentMethods: acceptedMethods(c),
         ...(located ? { lat: c.location.lat, lng: c.location.lng } : {})
       },
       service: { key: svc.key, name: def.name, price: svc.price, durationMins: svc.durationMins, notes: svc.notes },
@@ -133,7 +133,7 @@ export const createBooking = asyncHandler(async (req, res) => {
           vehicle: vehicle._id,
           center: center._id,
           service: { key: svc.key, name: serviceByKey(svc.key).name, vehicleType: svc.vehicleType, price: svc.price, durationMins: svc.durationMins },
-          vehicleSnapshot: { brand: vehicle.brand, model: vehicle.model, regNumber: vehicle.regNumber, type: vehicle.type, km: vehicle.km },
+          vehicleSnapshot: { brand: vehicle.brand, model: vehicle.model, regNumber: vehicle.regNumber, type: vehicle.type, km: vehicle.km, imageUrl: vehicle.image?.url || undefined },
           date, slot, problem,
           history: [{ status: 'pending', by: 'customer' }]
         });
@@ -168,8 +168,12 @@ export const getBooking = asyncHandler(async (req, res) => {
   // The pickup code is hidden everywhere else; only the owner of the booking gets to see it.
   const booking = await populateForCustomer(Booking.findById(req.params.id).select('+pickup.otp'));
   if (booking.status !== 'ready_for_pickup' && booking.pickup) booking.pickup.otp = undefined;
+  // A center that wants payment before pickup: the code stays hidden until the bill is paid.
+  const payBeforePickup = !!booking.center?.paymentSettings?.payBeforePickup;
+  const pickupLocked = payBeforePickup && booking.status === 'ready_for_pickup' && booking.bill?.payment?.status !== 'paid';
+  if (pickupLocked && booking.pickup) booking.pickup.otp = undefined;
   const health = await VehicleHealth.findOne({ booking: booking._id }).lean();
-  res.json({ ...booking.toObject(), health });
+  res.json({ ...booking.toObject(), health, paymentMethods: acceptedMethods(booking.center), payBeforePickup, pickupLocked });
 });
 
 // PATCH /api/bookings/:id/recommendations/:recId   body: { decision: 'approved' | 'rejected' }

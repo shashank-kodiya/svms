@@ -34,3 +34,23 @@
     transform: none;
   }
 }
+
+.center-payments .upi-qr-manage { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.center-payments .upi-qr-box { width: 180px; height: 180px; border: 1px dashed var(--line); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; }
+.center-payments .upi-qr-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.center-payments .warn-note { color: var(--warn); max-width: 320px; }
+
+/* Daily payment summary (end-of-day settlement) */
+.center-payments .daily-summary__nav { gap: 6px; }
+.center-payments .daily-summary__nav input[type="date"] { padding: 4px 8px; }
+.center-payments .daily-summary__total { border-left: 4px solid var(--accent); }
+.center-payments .daily-summary__pending { gap: 8px; }
+.center-payments .daily-summary tfoot th { text-align: left; border-top: 2px solid var(--line); }
+.center-payments .daily-summary tfoot th.num { text-align: right; }
+
+/* Print only the day's summary for the cash book */
+@media print {
+  .center-portal .topbar, .center-portal nav, .center-payments > .card:not(.daily-summary),
+  .center-payments .daily-summary button, .center-payments .daily-summary__nav { display: none !important; }
+  .center-payments .daily-summary { border: 0; box-shadow: none; }
+}

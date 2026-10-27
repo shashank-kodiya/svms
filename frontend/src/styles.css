@@ -309,3 +309,41 @@ th.num, td.num { text-align: right; white-space: nowrap; }
 .photo-manage .thumb .chip { position: absolute; top: 6px; left: 6px; }
 .photo-manage figcaption { font-size: .8rem; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .map-dot { box-sizing: border-box; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.35); color: #fff; font: 700 11px/1 system-ui, sans-serif; display: flex; align-items: center; justify-content: center; }
+/* Public service history check (opened from the QR on a vehicle's report) */
+.history-card { max-width: 560px; }
+.history-card h3 { margin: 6px 0 0; }
+.history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.history-list li { padding: 10px 0 10px 14px; border-left: 3px solid var(--accent); margin-left: 4px; display: flex; flex-direction: column; gap: 2px; }
+.history-list li + li { border-top: 1px solid var(--line); }
+/* Accepted payment methods (chips) */
+.pay-methods { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0; }
+.pay-method { display: inline-flex; align-items: center; gap: 4px; }
+.center-upi-qr { object-fit: contain; background: #fff; border-radius: 8px; }
+.bad-text { color: var(--bad); }
+.otp-box.locked { border-color: var(--warn); background: var(--warn-soft); }
+/* Customer's vehicle photo on bookings (center side) */
+.vthumb { flex: none; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--sunk); cursor: zoom-in; }
+.vthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vthumb--empty { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: default; font-size: 1.5rem; border-style: dashed; }
+.vthumb__note { font-size: .62rem; color: var(--muted); }
+.request-row { align-items: flex-start; gap: 14px; flex-wrap: nowrap; }
+.request-row .grow { flex: 1; min-width: 0; }
+.chip-thumb { width: 18px; height: 18px; border-radius: 4px; object-fit: cover; margin-right: 4px; vertical-align: middle; }
+.job-photo { width: 100%; height: 110px; object-fit: cover; border-radius: 8px; display: block; margin-bottom: 6px; }
+.job-vehicle { align-items: center; gap: 14px; margin-bottom: 8px; }
+.confirm-vehicle { gap: 10px; align-items: center; }
+.confirm-vehicle__photo { width: 64px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+@media (max-width: 560px) { .request-row { flex-wrap: wrap; } }
+/* Roadside help (towing) */
+.tow-hero { border-left: 4px solid var(--bad); background: linear-gradient(90deg, var(--bad-soft), transparent 70%); }
+.tow-active { border-left: 4px solid var(--accent); }
+.tow-steps { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; padding: 0; }
+.tow-steps li { flex: 1; min-width: 110px; padding: 6px 10px; border-radius: 8px; background: var(--sunk); color: var(--muted); font-size: .82rem; text-align: center; }
+.tow-steps li.done { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+.tow-center.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.tow-request.requested { border-left: 4px solid var(--warn); }
+.tow-request.accepted, .tow-request.on_the_way { border-left: 4px solid var(--accent); }
+.tow-contact .field { flex: 1; min-width: 140px; }
+.tow-shortcut { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; padding: 8px 10px; border: 1px dashed var(--bad); border-radius: 8px; background: var(--bad-soft); }
+.tow-route { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.tow-history .seg { margin: 8px 0; } .tow-history__stats .stat .v { font-size: 1.4rem; }

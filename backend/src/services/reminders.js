@@ -3,6 +3,7 @@ import { DOCUMENTS } from '../constants/vehicles.js';
 import { nowIST } from '../utils/time.js';
 import { notify } from './notifications.js';
 import { serviceStatus, daysBetween, SERVICE_EVERY_MONTHS, SERVICE_EVERY_KM } from './maintenance.js';
+import { runPaymentReminders } from './paymentReminders.js';
 
 // Reminders go out when a document is this many days (or fewer) from expiring.
 const DOC_STEPS = [30, 7, 1, 0];
@@ -82,6 +83,17 @@ export function startReminderScheduler() {
       console.warn(`Reminder job failed: ${err.message}`);
     }
   };
-  setTimeout(tick, 15000); // shortly after start-up
-  setInterval(tick, 60 * 60 * 1000).unref();
+  // Unpaid bills of vehicles ready for pickup: checked every hour, but only between 9 AM and 8 PM India time.
+  const payTick = async () => {
+    const { minutes } = nowIST();
+    if (minutes < 9 * 60 || minutes >= 20 * 60) return;
+    try {
+      const r = await runPaymentReminders();
+      if (r.customer || r.center) console.log(`Payment reminders: ${r.customer} to customers, ${r.center} to centers (${r.checked} unpaid bills)`);
+    } catch (err) {
+      console.warn(`Payment reminder job failed: ${err.message}`);
+    }
+  };
+  setTimeout(() => { tick(); payTick(); }, 15000); // shortly after start-up
+  setInterval(() => { tick(); payTick(); }, 60 * 60 * 1000).unref();
 }

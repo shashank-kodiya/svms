@@ -10,6 +10,7 @@ import PayPanel from '../../components/PayPanel.jsx';
 import FeedbackPanel from '../../components/FeedbackPanel.jsx';
 import api, { errorMessage, downloadFile } from '../../api/client.js';
 import { getSocket } from '../../api/socket.js';
+import PaymentMethods from '../../components/PaymentMethods.jsx';
 import { statusLabel, statusTone, inr, niceDate, niceTime, URGENCY_TONE, REC_STATUS } from '../../utils/booking.js';
 
 const UPDATE_TEXT = {
@@ -94,18 +95,33 @@ export default function BookingDetail() {
         <div className="small">{b.center?.address}, {b.center?.city} · {b.center?.phone}{b.mechanic ? ` · Mechanic: ${b.mechanic.name}` : ''}</div>
         {b.status === 'completed' && <div className="alert good">Service completed. You collected your vehicle on {new Date(b.pickup?.collectedAt || b.updatedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}.</div>}
         {['pending', 'accepted'].includes(b.status) && <div className="small muted">To reschedule or cancel, go to <Link to="/customer/bookings">My Bookings</Link>.</div>}
+        {['pending', 'accepted'].includes(b.status) && (
+          <div className="tow-shortcut small">
+            🚨 Stuck on the way to {b.center?.name || 'the center'}? <Link className="btn sm" to={`/customer/towing?booking=${b._id}`}>Get towing help</Link>
+          </div>
+        )}
       </div>
 
       {b.status === 'ready_for_pickup' && (
         <div className="card">
           <h3>Your vehicle is ready to collect</h3>
-          <div className="otp-box">
-            <span className="small">Show this pickup code at {b.center?.name}</span>
-            <span className="otp" aria-label={`Pickup code ${b.pickup?.otp?.split('').join(' ')}`}>{b.pickup?.otp || '----'}</span>
-            <span className="small">Amount to pay: <b>{b.bill ? `₹${b.bill.total.toLocaleString('en-IN')}` : '—'}</b> {b.bill?.payment?.status === 'paid' ? '(paid)' : '(pay online below, or cash, card or UPI at the counter)'}</span>
-          </div>
-          <p className="small muted">Only give this code to the center when you collect the vehicle. Never share it on a phone call.</p>
-          <div className="row"><button className="btn sm" onClick={newCode}>Get a new code</button></div>
+          {b.pickupLocked ? (
+            <div className="otp-box locked">
+              <span className="otp" aria-hidden="true">🔒</span>
+              <span><b>Pay the bill to get your pickup code</b></span>
+              <span className="small">{b.center?.name} releases vehicles after payment. Amount: <b>{b.bill ? `₹${b.bill.total.toLocaleString('en-IN')}` : '—'}</b>. Pay online below, or pay at the counter; the code appears here as soon as the payment is confirmed.</span>
+            </div>
+          ) : (
+            <>
+              <div className="otp-box">
+                <span className="small">Show this pickup code at {b.center?.name}</span>
+                <span className="otp" aria-label={`Pickup code ${b.pickup?.otp?.split('').join(' ')}`}>{b.pickup?.otp || '----'}</span>
+                <span className="small">Amount to pay: <b>{b.bill ? `₹${b.bill.total.toLocaleString('en-IN')}` : '—'}</b> {b.bill?.payment?.status === 'paid' ? '(paid)' : '(pay online below, or cash, card or UPI at the counter)'}</span>
+              </div>
+              <p className="small muted">Only give this code to the center when you collect the vehicle. Never share it on a phone call.</p>
+              <div className="row"><button className="btn sm" onClick={newCode}>Get a new code</button></div>
+            </>
+          )}
           {codeMsg && <div className={`alert ${codeMsg.tone}`}>{codeMsg.text}</div>}
         </div>
       )}
@@ -118,6 +134,7 @@ export default function BookingDetail() {
         <div className="card">
           <div className="row between"><h3>Bill</h3><button className="btn sm" onClick={pdf}>Download invoice PDF</button></div>
           <BillTable bill={b.bill} bookingId={b._id} />
+          <PaymentMethods methods={b.paymentMethods} label={`${b.center?.name || 'The center'} accepts`} />
           {b.status !== 'ready_for_pickup' && codeMsg && <div className={`alert ${codeMsg.tone}`}>{codeMsg.text}</div>}
         </div>
       )}

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 // Something a person should know about: a booking update, a bill, a payment, a reminder.
 // Stored so it is still there when they come back; also pushed live while they are online.
-export const NOTIFICATION_TYPES = ['booking', 'bill', 'payment', 'reminder', 'feedback', 'system'];
+export const NOTIFICATION_TYPES = ['booking', 'bill', 'payment', 'reminder', 'feedback', 'towing', 'system'];
 
 const notificationSchema = new mongoose.Schema(
   {

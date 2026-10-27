@@ -119,7 +119,8 @@ const bookingSchema = new mongoose.Schema(
     // Copy of the vehicle as it was when booked.
     // ("type" must be written as { type: String } here, otherwise Mongoose treats it as a keyword.)
     vehicleSnapshot: {
-      brand: String, model: String, regNumber: String, type: { type: String }, km: Number
+      brand: String, model: String, regNumber: String, type: { type: String }, km: Number,
+      imageUrl: String   // the vehicle's photo at booking time, so the center can recognise it
     },
 
     date: { type: String, required: true },   // 'YYYY-MM-DD'

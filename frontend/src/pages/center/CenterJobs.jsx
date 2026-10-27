@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/Layout.jsx';
 import Plate from '../../components/Plate.jsx';
+import { vehiclePhoto } from '../../components/VehicleThumb.jsx';
 import api, { errorMessage } from '../../api/client.js';
 import { getSocket } from '../../api/socket.js';
 import { statusLabel, statusTone, niceDate, niceTime } from '../../utils/booking.js';
@@ -45,6 +46,7 @@ export default function CenterJobs() {
                   const waiting = (j.recommendations || []).filter((r) => r.status === 'awaiting').length;
                   return (
                     <Link key={j._id} to={`/center/jobs/${j._id}`} className="item link-item">
+                      {vehiclePhoto(j) && <img className="job-photo" src={vehiclePhoto(j)} alt={`${j.vehicleSnapshot?.brand} ${j.vehicleSnapshot?.model}`} loading="lazy" />}
                       <div className="row between"><Plate reg={j.vehicleSnapshot?.regNumber} /><span className={`chip ${statusTone(j.status)}`}>{statusLabel(j.status)}</span></div>
                       <b>{j.vehicleSnapshot?.brand} {j.vehicleSnapshot?.model} · {j.service.name}</b>
                       <span className="small muted">{niceDate(j.date)} {niceTime(j.slot)} · {j.customer?.name}</span>

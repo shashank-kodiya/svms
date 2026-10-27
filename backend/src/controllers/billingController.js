@@ -136,6 +136,32 @@ export async function issuePickupCode(bookingId) {
   await Booking.updateOne({ _id: bookingId }, { $set: { 'pickup.otp': newPickupCode(), 'pickup.otpAt': new Date(), 'pickup.attempts': 0 } });
 }
 
+// Does this center want the bill paid before the vehicle is released?
+export async function paysBeforePickup(centerId) {
+  const c = await ServiceCenter.findById(centerId).select('paymentSettings.payBeforePickup').lean();
+  return !!c?.paymentSettings?.payBeforePickup;
+}
+
+// POST /api/center/bookings/:id/payment   body: { paymentMethod }
+// Records a payment taken at the counter before handover (needed when the center wants payment before pickup).
+export const recordCounterPayment = asyncHandler(async (req, res) => {
+  const b = await centerBooking(req);
+  if (!['quality_check', 'ready_for_pickup'].includes(b.status)) throw new AppError('Record the payment once the work is done and the bill is final.', 409);
+  if (!b.bill) throw new AppError('Generate the bill first.', 409);
+  if (b.bill.payment?.status === 'paid') throw new AppError('This bill is already paid.', 409);
+  if (await Payment.exists({ booking: b._id, status: 'submitted' })) {
+    throw new AppError('The customer sent an online payment. Confirm or reject it first.', 409);
+  }
+  // Only mark it paid if it is still unpaid (a double click, or an online payment confirmed meanwhile, does nothing).
+  const saved = await Booking.updateOne(
+    { _id: b._id, 'bill.payment.status': 'unpaid' },
+    { $set: { 'bill.payment': { status: 'paid', method: req.body.paymentMethod, paidAt: new Date() } } }
+  );
+  if (!saved.modifiedCount) throw new AppError('This bill is already paid.', 409);
+  emitBookingToCustomer(b.customer, await Booking.findById(b._id), 'payment');
+  res.json(await jobCard(b._id));
+});
+
 // POST /api/center/bookings/:id/handover   body: { otp, paymentMethod }
 // The customer tells the center their 4-digit code; only then is the vehicle handed over.
 export const handover = asyncHandler(async (req, res) => {
@@ -145,6 +171,9 @@ export const handover = asyncHandler(async (req, res) => {
   // Phase 7: a bill the customer paid online needs no payment method here. Otherwise the center
   // says how it was paid at the counter, and a payment still waiting for confirmation must be dealt with first.
   const paidOnline = b.bill.payment?.status === 'paid';
+  if (!paidOnline && await paysBeforePickup(b.center)) {
+    throw new AppError('Your center releases vehicles only after payment. Record the payment first.', 409);
+  }
   if (!paidOnline) {
     if (await Payment.exists({ booking: b._id, status: 'submitted' })) {
       throw new AppError('The customer sent an online payment. Confirm or reject it before handing over.', 409);
@@ -179,7 +208,7 @@ export const handover = asyncHandler(async (req, res) => {
 });
 
 const populateInvoice = (q) =>
-  q.populate('center', 'name address city pincode phone gstin').populate('customer', 'name phone email');
+  q.populate('center', 'name address city pincode phone gstin paymentSettings.methods paymentSettings.acceptsUpi').populate('customer', 'name phone email');
 
 // GET /api/center/bookings/:id/invoice.pdf
 export const centerInvoicePdf = asyncHandler(async (req, res) => {
@@ -207,6 +236,9 @@ export const customerInvoicePdf = asyncHandler(async (req, res) => {
 export const newCustomerPickupCode = asyncHandler(async (req, res) => {
   const b = await myBooking(req);
   if (b.status !== 'ready_for_pickup') throw new AppError('A pickup code is only needed when your vehicle is ready.', 409);
+  if (b.bill?.payment?.status !== 'paid' && await paysBeforePickup(b.center)) {
+    throw new AppError('This center releases vehicles after payment. Pay the bill to get your pickup code.', 409);
+  }
   await issuePickupCode(b._id);
   const fresh = await Booking.findById(b._id).select('+pickup.otp');
   res.json({ otp: fresh.pickup.otp, message: 'New code ready. The old code no longer works.' });

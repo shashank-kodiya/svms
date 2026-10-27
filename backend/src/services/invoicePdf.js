@@ -1,6 +1,9 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { verifyUrl } from './billing.js';
+import { acceptedMethods } from '../models/ServiceCenter.js';
+
+const METHOD_LABEL = { cash: 'Cash', upi: 'UPI', card: 'Card', netbanking: 'Net banking', emi: 'EMI' };
 
 // The built-in PDF fonts have no ₹ sign, so the PDF writes "Rs.".
 const rs = (n) => `Rs. ${Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -83,8 +86,10 @@ export async function sendInvoicePdf(res, booking) {
   doc.font('Helvetica').fontSize(9).fillColor(paid ? '#1a7f4b' : '#a15c00')
     .text(paid ? `Paid (${bill.payment.method.replace('_', ' ')}${bill.payment.reference ? `, ref ${bill.payment.reference}` : ''}) on ${fmtDate(bill.payment.paidAt)}` : 'Payment due at pickup', 330, y, { width: L + W - 330, align: 'right' });
 
+  doc.fillColor(soft).text(`Payment accepted: ${acceptedMethods(b.center).map((m) => METHOD_LABEL[m]).join(', ')}`, 330, y + 14, { width: L + W - 330, align: 'right' });
+
   // QR code to check the invoice is genuine
-  const qy = y + 40;
+  const qy = y + 48;
   doc.image(qr, L, qy, { width: 96 });
   doc.font('Helvetica-Bold').fontSize(9).fillColor(ink).text('Scan to verify this invoice', L + 108, qy + 22);
   doc.font('Helvetica').fontSize(8).fillColor(soft)

@@ -5,6 +5,7 @@ import { niceDate } from '../../utils/booking.js';
 import Plate from '../../components/Plate.jsx';
 import Suggestions from '../../components/Suggestions.jsx';
 import { HealthHistory } from '../../components/HealthView.jsx';
+import ServiceHistoryCard from '../../components/ServiceHistoryCard.jsx';
 import api, { errorMessage } from '../../api/client.js';
 import { fmtDate, fmtKm, toInputDate, docStatus, DOC_LABELS, kmPerDay } from '../../utils/format.js';
 
@@ -174,6 +175,8 @@ export default function VehicleDetail() {
         </div>
         <p className="small muted">From Phase 8, the next service is due 6 months or 10,000 km after the last service, whichever comes first.</p>
       </div>
+
+      <ServiceHistoryCard vehicleId={id} regNumber={v.regNumber} />
 
       <div className="card">
         <h3>Health history</h3>
