@@ -6,6 +6,7 @@ import SlotPicker from '../../components/SlotPicker.jsx';
 import MapView from '../../components/MapView.jsx';
 import DirectionsBar, { useCenterRoute } from '../../components/DirectionsBar.jsx';
 import PaymentMethods from '../../components/PaymentMethods.jsx';
+import DatePicker from '../../components/DatePicker.jsx';
 import CenterReviews from '../../components/CenterReviews.jsx';
 import { Stars } from '../../components/Stars.jsx';
 import useMyLocation from '../../hooks/useMyLocation.js';
@@ -158,7 +159,7 @@ export default function BookService() {
                 {services.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}
               </select>
             </label>
-            <label className="field"><span>Date</span><input type="date" min={localDate()} max={localDate(90)} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
+            <div className="field"><span>Date</span><DatePicker label="Date" min={localDate()} max={localDate(90)} value={form.date} onChange={(date) => setForm({ ...form, date })} /></div>
             <label className="field"><span>City (optional)</span><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Mysuru" /></label>
             <button className="btn primary" disabled={searching}>{searching ? 'Searching…' : 'Find centers'}</button>
           </div>

@@ -18,6 +18,10 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
 button, input, select { font: inherit; color: inherit; }
+/* Dropdown lists: some pages give fields a see-through background, which Windows draws as grey in the open list.
+   The options get the page's solid background and text colour instead, in light and dark themes alike. */
+select option, select optgroup { background-color: var(--bg); color: var(--ink); }
+select option:disabled { color: var(--muted); }
 h1, h3 { font-family: var(--f-display); margin: 0; }
 h1 { font-size: 1.7rem; }
 a { color: var(--accent); }
@@ -347,3 +351,56 @@ th.num, td.num { text-align: right; white-space: nowrap; }
 .tow-shortcut { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; padding: 8px 10px; border: 1px dashed var(--bad); border-radius: 8px; background: var(--bad-soft); }
 .tow-route { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 .tow-history .seg { margin: 8px 0; } .tow-history__stats .stat .v { font-size: 1.4rem; }
+
+/* Our own date picker (components/DatePicker.jsx): rounded 20px card instead of the browser's calendar */
+.datepicker { position: relative; }
+.datepicker__field {
+  width: 100%; min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 6px 6px 6px 14px; border: 1px solid var(--line); border-radius: 20px;
+  background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.book-service-page .datepicker__field { background: rgba(8, 12, 17, .55); border-color: rgba(170, 190, 220, .24); }
+.datepicker__field:hover { border-color: var(--accent); }
+.datepicker__field.open, .datepicker__field:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.datepicker__icon { width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); }
+
+.datepicker__pop {
+  position: absolute; z-index: 60; top: calc(100% + 8px); left: 0; width: 312px; max-width: calc(100vw - 32px);
+  padding: 14px; border-radius: 20px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--bg) 92%, var(--accent) 8%);
+  box-shadow: 0 24px 48px -16px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .03) inset;
+  backdrop-filter: blur(14px);
+  animation: datepicker-in .16s ease-out;
+}
+@keyframes datepicker-in { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.datepicker__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.datepicker__head b { font-size: 1rem; color: var(--ink); }
+.datepicker__nav {
+  width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--sunk); color: var(--ink);
+  font-size: 1.3rem; line-height: 1; cursor: pointer; transition: background .15s ease;
+}
+.datepicker__nav:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
+.datepicker__nav:disabled { opacity: .3; cursor: not-allowed; }
+.datepicker__week, .datepicker__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.datepicker__week span { text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: .04em; color: var(--muted); padding: 4px 0; }
+.datepicker__day {
+  aspect-ratio: 1; border: 0; border-radius: 50%; background: transparent; color: var(--ink);
+  font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; transition: background .12s ease, transform .12s ease;
+}
+.datepicker__day:hover:not(:disabled) { background: var(--accent-soft); transform: scale(1.06); }
+.datepicker__day:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.datepicker__day.other { color: var(--muted); opacity: .55; }
+.datepicker__day.today { box-shadow: inset 0 0 0 2px var(--accent); }
+.datepicker__day.selected { background: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 14px -6px var(--accent); }
+.datepicker__day.disabled { opacity: .22; cursor: not-allowed; text-decoration: line-through; }
+.datepicker__foot { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.datepicker__chip {
+  border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; background: transparent; color: var(--ink);
+  font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+}
+.datepicker__chip:hover, .datepicker__chip.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.datepicker__hint { margin-left: auto; font-size: .74rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .datepicker__pop { animation: none; } .datepicker__day:hover:not(:disabled) { transform: none; } }
+/* Cards are separate layers (they animate), so lift the one holding an open calendar above the cards below it. */
+.card:has(.datepicker__pop) { position: relative; z-index: 50; }
